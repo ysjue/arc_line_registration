@@ -64,6 +64,7 @@ F,error = solver1.solve(trus_spots+noises, cam_laser_start_spots,cam_N, F0=ident
 x_pred, cam_spots_pred = solver1.output()
 _,error2 = solver2.solve(trus_spots+noises, cam_laser_start_spots,cam_N, F0=identity_matrix())
 x_pred2, cam_spots_pred2 = solver2.output()
+print(error,error2)
 print('x_pred1:', x_pred[:,0])
 print('x_pred2:', x_pred2[:,0])
 print('x gt:', x)
