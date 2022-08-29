@@ -1,7 +1,8 @@
-from transformations import superimposition_matrix,translation_matrix,rotation_matrix,rotation_from_matrix
+from utils.transformations import superimposition_matrix,translation_matrix,rotation_matrix,rotation_from_matrix
 import numpy as np
 from matplotlib import pyplot as plt
 from scipy import optimize
+import scipy.stats as st
 
 homo = lambda x: np.concatenate([x,np.ones((1,x.shape[1]), np.float32)], axis = 0) if x.shape[0] == 3 else False
 
@@ -21,7 +22,10 @@ class LeastSquare_Solver(object):
 
     def eval(self, x, y):
         diff = x - y
-        return np.mean([np.linalg.norm(diff[:,i]) for i in range(x.shape[1])])
+       
+        self.errs = [np.linalg.norm(diff[:,i]) for i in range(x.shape[1])]
+
+        return np.mean(self.errs)
 
     def output(self):
         return self.x, self.laser_spots
@@ -62,7 +66,7 @@ class LeastSquare_Solver(object):
                 print('Converge. Registration successful')
                 self.x = x
                 self.laser_spots = laser_spots
-                return F,error
+                return F,error, 0,0
             
             # Construct the matrix A, B for solving V(lambda) = Freg @ P
             B = (cam_spots - laser_start_points).T.reshape(-1,1)
@@ -99,7 +103,11 @@ class LeastSquare_Solver(object):
             # using Horn's methods
             F = superimposition_matrix(trus_spots,laser_spots, usesvd=False)
                
+        
         self.x = x
         self.laser_spots = laser_spots
-        return F, error
+        lower, upper = st.t.interval(alpha=0.95, df=len(self.errs)-1, 
+                                 loc=np.mean(self.errs), 
+                                 scale=st.sem(self.errs))  
+        return F, error,lower, upper
 

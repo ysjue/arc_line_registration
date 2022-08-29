@@ -2,7 +2,7 @@ import numpy as np
 from scipy.optimize import fsolve
 import math
 from sympy import *
-from transformations import unit_vector
+from utils.transformations import unit_vector
 
 class solver(object):
 
