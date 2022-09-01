@@ -13,8 +13,8 @@ from scipy.optimize import least_squares
 
 
 # total number of pairs
-line_num = 12
-add_noise = True
+line_num = 11
+add_noise = False
 
 # construct ground truth spots w.r.t. trus frame 
 trus_bounding_box = np.asarray([40, 80, 15], np.float32) # x,y,z, unit: mm
@@ -23,7 +23,7 @@ trus_spots = np.array([[-20,-40, 60]]).T+\
 trus_spots_noises = np.ones_like(trus_spots) * np.array([-1,-1,-2])[:,None]+\
                             np.random.rand(trus_spots.shape[0], trus_spots.shape[1])*np.array([2,2.0,4.0])[:,None]
 weight = 1.0 * (np.random.rand(line_num) > 0.5)
-random_theta = (-5 + np.random.rand(line_num) * 3) * weight + (2 + np.random.rand(line_num) * 3 ) * (1 - weight)
+random_theta = (-6 + np.random.rand(line_num) * 3) * weight + (2 + np.random.rand(line_num) * 4 ) * (1 - weight)
 rotms = [rotation_matrix(theta*3.1415926/180.0,[1,0,0],[0,0,0]) for theta in random_theta]
 trus_spots_arc = [ rotm[:3,:3]@trus_spots[:,i][:,None]  \
                     for i, rotm in zip(range(line_num), rotms)]  
@@ -121,7 +121,7 @@ while error2 < lst_error2:
     print('error2: ',error2 )
     F = F2
     x_pred2, cam_spots_pred = solver2.output()
-    if error2 < 0.02 or count > 55:
+    if error2 < 0.000000002: #or count > 55:
         print("slight rotation")
         break
 F2=lst_F2
