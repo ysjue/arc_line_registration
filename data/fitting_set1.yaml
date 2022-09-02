@@ -1,0 +1,328 @@
+# Unit of angle is degree, rotation offset around the lateral axis is 20 degree
+---
+Samples:
+  - Sample1:
+    TRUS1:
+      angle: 8
+      u: 0.01992
+      v: 0.052128
+      intensity: 20.469
+
+    TRUS2:
+      angle: 4
+      u: 0.019997
+      v: 0.052301
+      intensity: 9.32
+
+    TRUS3:
+      angle: 14
+      u: 0.0200018
+      v: 0.052277
+      intensity: 9.49
+
+    TRUS4:
+      angle: -2.5
+      u: 0.0162
+      v: 0.0150
+      intensity: 3.80
+      x: 0.0162
+      y: -0.0011
+      z: 0.0250
+
+    Marker:
+      quaternion:   [-0.416, 0.891, -0.098, 0.151]
+      translation: [0.038, -0.012, 0.095]
+
+  - Sample2:
+    TRUS1:
+      angle: 14
+      u: 0.00672
+      v: 0.05286
+      intensity: 25.629
+
+    TRUS2:
+      angle: 7
+      u: 0.006413
+      v: 0.053104
+      intensity: 9.95
+
+    TRUS3:
+      angle: 11
+      u: 0.006710
+      v: 0.052972
+      intensity: 19.85
+
+    TRUS4:
+      angle: 17
+      u: 0.006685
+      v: 0.053009
+      intensity: 16.0591
+
+    Marker:
+      quaternion:  [-0.210, 0.954, 0.199, 0.081]
+      translation: [0.024, -0.004, 0.088]
+
+  - Sample3:
+    TRUS1:
+      angle: 14
+      u: -0.00544
+      v: 0.05247
+      intensity: 12.6367
+
+    TRUS2:
+      angle: 17
+      u: -0.005418
+      v: 0.052461
+      intensity: 9.17
+
+    TRUS3:
+      angle: 10
+      u: -0.0054512
+      v: 0.052342
+      intensity: 9.76
+
+    TRUS4:
+      angle: 12
+      u: -0.005142
+      v: 0.052347
+      intensity: 12.0072
+
+    Marker:
+      quaternion:  [0.775, -0.615, 0.099, -0.106]
+      translation: [0.010, 0.001, 0.120]
+
+  - Sample4:
+    TRUS1:
+      angle: 14
+      u: -0.023458
+      v: 0.050867
+      intensity: 19.0366
+
+    TRUS2:
+      angle: 18
+      u: -0.02366
+      v: 0.0510004
+      intensity: 8.17
+
+    TRUS3:
+      angle: 10
+      u: -0.023372
+      v: 0.050951
+      intensity: 12.37
+
+    TRUS4:
+      angle: 12
+      u: -0.023562
+      v: 0.050861
+      intensity: 14.903
+
+    Marker:
+      quaternion:  [-0.526, 0.823, 0.202, 0.075]
+      translation:  [0.020, -0.008, 0.104]
+
+  - Sample5:
+    TRUS1:
+      angle: 12
+      u: 0.0012932
+      v: 0.051923
+      intensity: 22.46
+    TRUS2:
+      angle: 15
+      u: 0.001315
+      v: 0.052134
+      intensity: 15.002
+    TRUS3:
+      angle: 18
+      u: 0.00105
+      v: 0.05240
+      intensity: 8.64
+    TRUS4:
+      angle: 9
+      u: 0.001281
+      v: 0.051992
+      intensity: 18.4873
+    Marker:
+      quaternion:   [-0.595, 0.795, 0.055, 0.107]
+      translation:  [0.018, 0.004, 0.106]
+
+  - Sample6:
+    TRUS1:
+      angle: -3
+      u: 0.017173
+      v: 0.050834
+      intensity: 23.9965
+    TRUS2:
+      angle: -6
+      u: 0.017202
+      v: 0.050895
+      intensity: 17.99
+
+    TRUS3:
+      angle: 0
+      u: 0.01721
+      v: 0.050823
+      intensity: 16.744
+
+    TRUS4:
+      angle: 4
+      u: 0.01755
+      v: 0.05128
+      intensity: 8.98
+ 
+    Marker:
+      quaternion:   [0.875, 0.460, -0.042, -0.148]
+      translation:  [-0.045, -0.015, 0.089]
+
+  - Sample7:
+    TRUS1:
+      angle: 0
+      u: -0.006
+      v: 0.050556
+      intensity: 25.031
+    TRUS2:
+      angle: -6
+      u: -0.00628
+      v: 0.050859
+      intensity: 11.09
+    TRUS3:
+      angle: 6
+      u: -0.00587
+      v: 0.050946
+      intensity: 12.2991
+    TRUS4:
+      angle: -4
+      u: -0.00609
+      v: 0.050715
+      intensity: 18
+ 
+    Marker:
+      quaternion:   [0.908, -0.386, 0.053, -0.156]
+      translation:   [0.006, -0.036, 0.067]
+
+  - Sample8:
+    TRUS1:
+      angle: 0
+      u: 0.004641
+      v: 0.050675
+      intensity: 19.86
+    TRUS2:
+      angle: 5
+      u: 0.0043718
+      v: 0.051001
+      intensity: 9.774
+    TRUS3:
+      angle: -5
+      u: 0.004582
+      v: 0.05089
+      intensity: 11.659
+    TRUS4:
+      angle: -3
+      u: 0.004423
+      v: 0.05077
+      intensity: 16.37
+    Marker:
+      quaternion:  [0.112, 0.984, 0.136, -0.005]
+      translation: [0.026, -0.025, 0.083]
+
+  - Sample9:
+    TRUS1:
+      angle: 2
+      u: -0.01376
+      v: 0.050118
+      intensity: 22.1
+    TRUS2:
+      angle: 6
+      u: -0.013583
+      v: 0.05033
+      intensity: 10.13
+    TRUS3:
+      angle: -2
+      u: -0.013722
+      v: 0.050179
+      intensity: 18.52
+    TRUS4:
+      angle: -5
+      u: -0.01386
+      v: 0.050297
+      intensity: 10.15
+
+    Marker:
+      quaternion:  [-0.506, 0.856, -0.011, 0.107]
+      translation: [0.049, -0.014, 0.123]
+
+  - Sample10:
+    TRUS1:
+      angle: -15
+      u: 0.01639
+      v: 0.051779
+      intensity: 22.5
+    TRUS2:
+      angle: -21
+      u: 0.016493
+      v: 0.052131
+      intensity: 11.18
+    TRUS3:
+      angle: -12
+      u: 0.016477
+      v: 0.051821
+      intensity: 16.78
+    TRUS4:
+      angle: -10
+      u: 0.01638
+      v: 0.051968
+      intensity: 11.25
+
+    Marker:
+      quaternion:  [-0.500, 0.864, -0.044, -0.038]
+      translation: [0.030, -0.004, 0.078]
+
+  - Sample11:
+    TRUS1:
+      angle: -9
+      u: -0.017495
+      v: 0.050817
+      intensity: 25.1428
+    TRUS2:
+      angle: -7
+      u: -0.017275
+      v: 0.05097
+      intensity: 18.78
+    TRUS3:
+      angle: -5
+      u: -0.017414
+      v: 0.051017
+      intensity: 16.28
+    TRUS4:
+      angle: -12
+      u: -0.017607
+      v: 0.050826
+      intensity: 21.60
+    
+    Marker:
+      quaternion: [-0.389, 0.878, 0.240, 0.138]
+      translation:  [0.050, 0.010, 0.103]
+
+  - Sample12:
+    TRUS1:
+      angle: -17
+      u: -0.0088116
+      v: 0.052774
+      intensity: 22.6665
+    TRUS2:
+      angle: -15
+      u: -0.0088657
+      v: 0.05278
+      intensity: 17.5782
+    TRUS3:
+      angle: -21
+      u: -0.00861
+      v: 0.052922
+      intensity: 15.5828
+    TRUS4:
+      angle: -12
+      u: -0.0088433
+      v: 0.053068
+      intensity: 12.81
+    Marker:
+      quaternion: [0.637, 0.726, -0.062, -0.252]
+      translation:   [-0.030, -0.027, 0.078]

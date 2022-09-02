@@ -108,6 +108,7 @@ class LeastSquare_Solver(object):
         self.laser_spots = laser_spots
         lower, upper = st.t.interval(alpha=0.95, df=len(self.errs)-1, 
                                  loc=np.mean(self.errs), 
-                                 scale=st.sem(self.errs))  
+                                 scale=st.sem(self.errs)) 
+        print(np.argsort(self.errs)) 
         return F, error,lower, upper
 

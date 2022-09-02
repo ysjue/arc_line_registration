@@ -99,6 +99,7 @@ lst_error2 = 10000
 F2 =identity_matrix()
 cam_spots_pred = cam_spots_pred1
 count = 0
+trus_spots_arc1 = trus_spots_arc
 while error2 < lst_error2: 
     count+=1
     theta = np.zeros(line_num)
@@ -121,7 +122,7 @@ while error2 < lst_error2:
     print('error2: ',error2 )
     F = F2
     x_pred2, cam_spots_pred = solver2.output()
-    if error2 < 0.000000002: #or count > 55:
+    if error2 < 2e-5 or count > 200:
         print("slight rotation")
         break
 F2=lst_F2

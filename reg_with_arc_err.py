@@ -10,17 +10,24 @@ import yaml
 import math 
 from scipy.optimize import least_squares
 
-with open('./data/point2line_data.yaml') as stream:
+with open('./data/fitting_set1.yaml') as stream:
     try:
         data = yaml.safe_load((stream))
     except yaml.YAMLERROIR as exc:
         print(exc)
 data_list = data['Samples']
+# print(data_list)
+
+data_list = [d for i,d in zip(range(len(data_list)),data_list) if i not in [11,6]]
 trus_spots = []
+keys = ['TRUS1', 'TRUS2', 'TRUS3']# 'TRUS4']
+
 for d in data_list:
-    theta = d['TRUS1']['angle']
-    u = d['TRUS1']['u']
-    v = d['TRUS1']['v']
+    key = random.sample(keys,1)[0] # 'TRUS1'
+    key = 'TRUS1'
+    theta = d[key]['angle']
+    u = d[key]['u']
+    v = d[key]['v']
     y = -1*(0.01 + v ) * math.sin(theta/180.0 * math.pi)
     z = (0.01 + v ) * math.cos(theta/180.0 * math.pi)
     trus_spots.append([u, y, z])
@@ -40,10 +47,10 @@ for i in range(len(cam2marker_rotms)):
     cam2marker_transforms.append(rotm)
 cam2marker_transforms = np.array(cam2marker_transforms)
 
-direc_vec = unit_vector(-1.0 * np.array([-0.24993895, -0.04863153,  0.96703955]))
+direc_vec = unit_vector(-1.0 * np.array([-0.32871691, -0.10795516, -0.93823]))
 
 cam_N = [unit_vector(cam2marker_transforms[i][:3,:3] @ direc_vec[:,None]) for i in range(len(cam2marker_transforms))]
-cam_laser_start_spots = [cam2marker_transforms[i] @ np.array([58.76608, 27.99237, 13.31244,1])[:,None] \
+cam_laser_start_spots = [cam2marker_transforms[i] @ np.array([ 49.9973,  18.979, -19.69427,1])[:,None] \
                              for i in range(len(cam2marker_transforms))]
 # fitted results:  [ 0.08478048  0.03536605 -0.1202362 ] [-0.21044382 -0.05426389  0.97609878]
 cam_N = np.concatenate(cam_N,axis=1)

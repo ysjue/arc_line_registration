@@ -9,13 +9,15 @@ from Solver.point_line_registration import LeastSquare_Solver as Solver
 import yaml
 import math 
 
-with open('./data/point2line_data.yaml') as stream:
+with open('./data/fitting_set1.yaml') as stream:
     try:
         data = yaml.safe_load((stream))
     except yaml.YAMLERROIR as exc:
         print(exc)
 data_list = data['Samples']
 trus_spots = []
+
+data_list = [d for i,d in zip(range(len(data_list)),data_list) if i not in [11,6]]
 for d in data_list:
     theta = d['TRUS1']['angle']
     u = d['TRUS1']['u']
@@ -23,6 +25,7 @@ for d in data_list:
     y = -1*(0.01 + v ) * math.sin(theta/180.0 * math.pi)
     z = (0.01 + v ) * math.cos(theta/180.0 * math.pi)
     trus_spots.append([u, y, z])
+ 
 trus_spots = np.array(trus_spots).T * 1000 # convert to mm
 
 
@@ -39,12 +42,12 @@ for i in range(len(cam2marker_rotms)):
     cam2marker_transforms.append(rotm)
 cam2marker_transforms = np.array(cam2marker_transforms)
 
-direc_vec = unit_vector(-1.0 * np.array([-0.24993895, -0.04863153,  0.96703955]))
+direc_vec = unit_vector(-1.0 * np.array([-0.32871691, -0.10795516, -0.93823]))
 
 cam_N = [unit_vector(cam2marker_transforms[i][:3,:3] @ direc_vec[:,None]) for i in range(len(cam2marker_transforms))]
-cam_laser_start_spots = [cam2marker_transforms[i] @ np.array([58.76608, 27.99237, 13.31244,1])[:,None] \
+cam_laser_start_spots = [cam2marker_transforms[i] @ np.array([ 49.9973,  18.979, -19.69427,1])[:,None] \
                              for i in range(len(cam2marker_transforms))]
-# fitted results:  [ 0.08478048  0.03536605 -0.1202362 ] [-0.21044382 -0.05426389  0.97609878]
+# fitted results:   [ 0.05312492  0.01149978 -0.02062431] [-0.35008202 -0.05933228 -0.93483809]
 cam_N = np.concatenate(cam_N,axis=1)
 cam_laser_start_spots = np.concatenate(cam_laser_start_spots,axis = 1)[:3]
 
@@ -65,13 +68,9 @@ ax.set_ylabel('Y Label (mm)')
 ax.set_zlabel('Z Label (mm)')
 
 solver1 = Solver(geo_consist=False)
-solver2 = Solver(geo_consist=True)
-F0 = np.array([[-3.41611997e-01 , 3.82063185e-01, -8.58678616e-01, -4.30000000e+01],
- [ 7.17263294e-01,  6.96371615e-01,  2.44936933e-02, -1.90000000e+02],
- [ 6.07317554e-01, -6.07531313e-01 ,-5.11928797e-01,  5.20000000e+02],
- [ 0.00000000e+00 , 0.00000000e+00  ,0.00000000e+00 , 1.00000000e+00]])
 F,error,lower,upper = solver1.solve(trus_spots, cam_laser_start_spots,cam_N, F0=identity_matrix())
 x_pred, cam_spots_pred = solver1.output()
+
 print('error1: ', error,lower,upper)
 print('x_pred1:', x_pred[:,0])
 print(np.linalg.inv(F))
