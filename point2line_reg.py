@@ -73,7 +73,7 @@ x_pred, cam_spots_pred = solver1.output()
 
 print('error1: ', error,lower,upper)
 print('x_pred1:', x_pred[:,0])
-print(np.linalg.inv(F))
+print(F)
 
 trus_laser_start_spots = np.linalg.inv(F)[:3,:3] @ cam_laser_start_spots + np.linalg.inv(F)[:3,3][:,None]
 trus_spots_pred = (np.linalg.inv(F) @ homo(cam_spots_pred))[:-1,:]

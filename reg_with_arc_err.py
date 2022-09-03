@@ -120,7 +120,7 @@ while error2 < lst_error2:
 F2=lst_F2
 print('error1: ', error,lower,upper)
 print('error2: ', error2,lower2,upper2)
-print(np.linalg.inv(F2))
+print(F2)
 
 trus_laser_start_spots = np.linalg.inv(F2)[:3,:3] @ cam_laser_start_spots + np.linalg.inv(F2)[:3,3][:,None]
 trus_spots_pred2 = (np.linalg.inv(F2) @ homo(cam_spots_pred))[:-1,:]
