@@ -1,3 +1,11 @@
+import os
+import numpy as np
+import scipy.stats as st
+import yaml
+from utils.transformations import rotation_matrix, quaternion_matrix, unit_vector
+from Solver.point_line_registration import homo
+from scipy.optimize import least_squares
+
 import numpy as np
 import random
 from utils.transformations import identity_matrix,unit_vector,rotation_matrix,quaternion_matrix, rotation_from_matrix,translation_matrix
@@ -8,94 +16,92 @@ from Solver.point_line_registration import LeastSquare_Solver as Solver
 import yaml
 import math 
 from scipy.optimize import least_squares
-import os
 
-# angle u v intensity
-root = './data/sample1.txt'
-txt_files = os.listdir(root)
-for txt_file in txt_files:
-    txt_file = os.path.join(root, txt_file)
-    with open(txt_file, 'r') as file:
-        contents = file.readlines()
-    contents = [c.split('/n')[0] for c in contents]
-    samples = np.array(contents)
-    gt_idx = np.argsort(samples[:,3])[-1]
+with open('./data/fitting_set1.yaml') as stream:
+    try:
+        data = yaml.safe_load((stream))
+    except yaml.YAMLERROIR as exc:
+        print(exc)
+data_list = data['Samples']
+# print(data_list)
 
-idxes = [i for i in range(samples.shape[1])]
+data_list = [d for i,d in zip(range(len(data_list)),data_list) if i not in [11,6]]
 trus_spots = []
-for i in range(samples.shape[1]):
-    idx = random.sample(idxes,1)[0]
-    theta = samples[idx, 0]
-    u = samples[idx, 1]
-    v = samples[idx, 2]
+keys = ['TRUS1', 'TRUS2', 'TRUS3']# 'TRUS4']
+thetas,us, vs = [],[],[]
+for d in data_list:
+    key = random.sample(keys,1)[0] # 'TRUS1'
+    key = 'TRUS1'
+    theta = d[key]['angle']
+    u = d[key]['u']
+    v = d[key]['v']
     y = -1*(0.01 + v ) * math.sin(theta/180.0 * math.pi)
     z = (0.01 + v ) * math.cos(theta/180.0 * math.pi)
     trus_spots.append([u, y, z])
+    us.append(u)
+    vs.append(v)
+    thetas.append(theta)
 trus_spots = np.array(trus_spots).T * 1000 # convert to mm
 
-cam2marker_rotm = quaternion_matrix(np.array([0.988, -0.048, 0.039, -0.143])) 
+
+cam2marker_rotms = [quaternion_matrix(d['Marker']['quaternion']) for d in data_list]
 
 
-cam2marker_translation = np.array([-0.016, 0.016, 0.090]) * 1000 # unit: mm
+cam2marker_translations = [d['Marker']['translation'] for d in data_list]
 cam2marker_transforms = []
-
-rotm = cam2marker_rotm
-translation = cam2marker_translation
-rotm[:3,3] = translation
-cam2marker_transforms = rotm
-
+for i in range(len(cam2marker_rotms)):
+    rotm = cam2marker_rotms[i]
+    translation = cam2marker_translations[i]
+    rotm[:3,3] = np.array(translation) * 1000
+    # rotm = np.linalg.inv(rotm)
+    cam2marker_transforms.append(rotm)
+cam2marker_transforms = np.array(cam2marker_transforms)
 
 direc_vec = unit_vector(-1.0 * np.array([-0.32871691, -0.10795516, -0.93823]))
 
-cam_N = unit_vector(cam2marker_transforms[:3,:3] @ direc_vec[:,None]) 
-cam_laser_start_spot = cam2marker_transforms @ np.array([ 49.9973,  18.979, -19.69427,1])[:,None] 
-                           
+cam_N = [unit_vector(cam2marker_transforms[i][:3,:3] @ direc_vec[:,None]) for i in range(len(cam2marker_transforms))]
+cam_laser_start_spots = [cam2marker_transforms[i] @ np.array([ 49.9973,  18.979, -19.69427,1])[:,None] \
+                             for i in range(len(cam2marker_transforms))]
 # fitted results:  [ 0.08478048  0.03536605 -0.1202362 ] [-0.21044382 -0.05426389  0.97609878]
+cam_N = np.concatenate(cam_N,axis=1)
+cam_laser_start_spots = np.concatenate(cam_laser_start_spots,axis = 1)[:3]
 
+idx =4
+t  = thetas[idx]
+u  = us[idx]
+v = vs[idx]
 
-# visualization
-colors = ['b','g','r','c','m','y','k','brown','gold','teal','plum']
-fig = plt.figure()
-ax = fig.gca(projection='3d')
-ax.set_xlabel('X Label (mm)')
-ax.set_ylabel('Y Label (mm)')
-ax.set_zlabel('Z Label (mm)')
-
-
-def fun(theta,trus_spots,laser_spots_pred,Freg):
-    rotms = [rotation_matrix(t*3.1415926/180.0,[1,0,0],[0,0,0]) for t in theta]
-    trus_spots = [ rotm[:3,:3] @ trus_spots[:,i][:,None]  \
-                    for i, rotm in zip(range(len(theta)), rotms)] 
-    trus_points = np.concatenate(trus_spots, axis = 1)
-    
-    error = np.sum(np.linalg.norm((Freg @ homo(trus_points))[:3] - laser_spots_pred, axis = 0)) #+ 0.1 *np.sum( theta**2)
+trus_spot = np.array([u, -1*v*np.sin(t*np.pi/180), v*np.cos(t*np.pi/180)])*1000
+cam_laser_start_spot = cam_laser_start_spots[:,idx] 
+cam_N = cam_N[:,idx]
+def fun(x,u,v,cam_laser_start_spots,cam_N,Freg):
+    theta = x[:1]
+    scale = x[1:]
+    laser_spots_pred = cam_laser_start_spots + scale * cam_N
+    trus_spot = np.array([u,-v * np.sin(theta*np.pi/180.0), v * np.cos(theta*np.pi/180.0)])[:,None] * 1000 # unit: mm
+    diff = (Freg @ homo(trus_spot))[:3] - laser_spots_pred
+    diff = np.array(diff)
+    error = np.linalg.norm(diff) #+ 0.1 *np.sum( theta**2)
+    print(error)
     return error
-error2 = 1000
-lst_error2 = 10000
-F2 =identity_matrix()
 
 
-theta = np.zeros(trus_spots.shape[1])
-result = least_squares(fun, theta,\
-                        bounds=([-5.0]*trus_spots.shape[1], [5.0] * trus_spots.shape[1]),\
-                            args=(trus_spots, cam_spots_pred, F))
-thetas = result.x
-print('estimated rotating angles: ', -1 * thetas)
+Freg = np.array([[-5.02140697e-01 , 8.51813669e-01 , 1.49225312e-01, -7.02880347e+00],
+ [ 8.64380456e-01 , 4.89092791e-01 , 1.16767586e-01, -4.03049345e+01],
+ [ 2.64792014e-02  ,1.87621201e-01, -9.81884483e-01,  2.22011082e+02],
+ [ 0.00000000e+00  ,0.00000000e+00,  0.00000000e+00 , 1.00000000e+00]])
+
+# Freg = np.array([[-4.95181165e-01 , 8.09645581e-01 , 3.15070860e-01 ,-1.68902134e+01],
+#  [ 8.68106977e-01 , 4.75483086e-01,  1.42499514e-01 ,-4.17637519e+01],
+#  [-3.44367627e-02 , 3.44078287e-01 ,-9.38309246e-01,  2.19955872e+02],
+#  [ 0.00000000e+00,  0.00000000e+00,  0.00000000e+00,  1.00000000e+00]])
+
+x = np.array([0,20])
+result = least_squares(fun, x,\
+                            bounds=([-30,0], [30,300] ),\
+                                args=(u,v,cam_laser_start_spot[:,None],cam_N[:,None],Freg))
+print(result.x)
+print(t)
+
 
     
-F2=lst_F2
-print('error1: ', error)
-
-for i in range(trus_spots_pred2.shape[1]):
-    ax.scatter(trus_laser_start_spots[0,i], trus_laser_start_spots[1,i], trus_laser_start_spots[2,i], marker='*',color=colors[i if i < 11 else 10])
-
-    ax.scatter(trus_spots_pred2[0,i], trus_spots_pred2[1,i], trus_spots_pred2[2,i], marker='^',color=colors[i if i < 11 else 10])
-    ax.scatter(trus_spots[0,i], trus_spots[1,i], trus_spots[2,i], marker='o',color=colors[i if i < 11 else 10])
-    ax.scatter(trus_spots_pred1[0,i], trus_spots_pred1[1,i], trus_spots_pred1[2,i], marker='x',color=colors[i if i < 11 else 10])
-    # trus_N = F[:3,:3].T@cam_N
-    
-    # ax.quiver(trus_laser_start_spots[0,i], trus_laser_start_spots[1,i], trus_laser_start_spots[2,i],\
-    #             trus_N[0,i],trus_N[1,i], trus_N[2,i],\
-    #             length = x_pred[i],color=colors[i if i < 11 else 10])
-
-plt.show()
