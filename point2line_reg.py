@@ -17,7 +17,8 @@ with open('./data/fitting_set1.yaml') as stream:
 data_list = data['Samples']
 trus_spots = []
 
-data_list = [d for i,d in zip(range(len(data_list)),data_list) if i not in [11,6]]
+data_list = [d for i,d in zip(range(len(data_list)),data_list) if i < 10 ] # luck sample
+data_list = [d for i,d in zip(range(len(data_list)),data_list) if i not in [11,6] ] # testset1 
 for d in data_list:
     theta = d['TRUS1']['angle']
     u = d['TRUS1']['u']
@@ -42,12 +43,17 @@ for i in range(len(cam2marker_rotms)):
     cam2marker_transforms.append(rotm)
 cam2marker_transforms = np.array(cam2marker_transforms)
 
-direc_vec = unit_vector(-1.0 * np.array([-0.32871691, -0.10795516, -0.93823]))
+# direc_vec = unit_vector( np.array([0.09555974, -0.05413993, -0.9939503]))
+
+# cam_N = [unit_vector(cam2marker_transforms[i][:3,:3] @ direc_vec[:,None]) for i in range(len(cam2marker_transforms))]
+# cam_laser_start_spots = [cam2marker_transforms[i] @ np.array([7.08929, 58.31985, -2.49508,1])[:,None] \
+#                              for i in range(len(cam2marker_transforms))]
+# fitted results:   [ 0.05312492  0.01149978 -0.02062431] [-0.35008202 -0.05933228 -0.93483809]
+direc_vec = unit_vector(np.array([-0.32871691, -0.10795516, -0.93823]))
 
 cam_N = [unit_vector(cam2marker_transforms[i][:3,:3] @ direc_vec[:,None]) for i in range(len(cam2marker_transforms))]
 cam_laser_start_spots = [cam2marker_transforms[i] @ np.array([ 49.9973,  18.979, -19.69427,1])[:,None] \
-                             for i in range(len(cam2marker_transforms))]
-# fitted results:   [ 0.05312492  0.01149978 -0.02062431] [-0.35008202 -0.05933228 -0.93483809]
+                            for i in range(len(cam2marker_transforms))]
 cam_N = np.concatenate(cam_N,axis=1)
 cam_laser_start_spots = np.concatenate(cam_laser_start_spots,axis = 1)[:3]
 
@@ -56,13 +62,7 @@ cam_laser_start_spots = np.concatenate(cam_laser_start_spots,axis = 1)[:3]
 colors = ['b','g','r','c','m','y','k','brown','gold','teal','plum']
 fig = plt.figure()
 ax = fig.gca(projection='3d')
-# for i in range(trus_spots.shape[1]):
-#     ax.scatter(trus_spots[0,i], trus_spots[1,i], trus_spots[2,i], marker='o',color=colors[i if i < 11 else 10])
-#     ax.scatter(trus_laser_start_spots[0,i], trus_laser_start_spots[1,i], \
-#                 trus_laser_start_spots[2,i], marker='^',color=colors[i if i < 11 else 10])
-#     ax.quiver(trus_laser_start_spots[0,i], trus_laser_start_spots[1,i], trus_laser_start_spots[2,i],\
-#                 trus_N[0,i],trus_N[1,i], trus_N[2,i],\
-#                 length = x[i],color=colors[i if i < 11 else 10])
+
 ax.set_xlabel('X Label (mm)')
 ax.set_ylabel('Y Label (mm)')
 ax.set_zlabel('Z Label (mm)')

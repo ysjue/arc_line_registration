@@ -1,16 +1,22 @@
-from functools import total_ordering
-from turtle import color
-import numpy as np
 import random
 import sys
+from functools import total_ordering
+from turtle import color
+
+import numpy as np
+
 sys.path.append('./')
-from utils.transformations import identity_matrix,unit_vector,rotation_matrix, rotation_from_matrix,translation_matrix
+import tqdm
 from matplotlib import pyplot as plt
 from mpl_toolkits.mplot3d import Axes3D
-from Solver.point_line_registration import homo
-from Solver.point_line_registration import LeastSquare_Solver as Solver
 from scipy.optimize import least_squares
-import tqdm
+
+from Solver.point_line_registration import LeastSquare_Solver as Solver
+from Solver.point_line_registration import homo
+from utils.transformations import (identity_matrix, rotation_from_matrix,
+                                   rotation_matrix, translation_matrix,
+                                   unit_vector)
+
 
 def main():
     # total number of pairs

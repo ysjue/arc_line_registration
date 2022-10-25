@@ -1,9 +1,16 @@
 #!/usr/bin/env python
+import sys
+
 import numpy as np
-from utils.transformations import quaternion_matrix
+
+sys.path.append('./')
+import random
+
 from matplotlib import pyplot as plt
 from mpl_toolkits.mplot3d import Axes3D
-import random
+
+from utils.transformations import quaternion_matrix
+
 """
 Param
 ---------
@@ -89,8 +96,9 @@ for time in range(RANSAC_times):
                 
         
         print('residual error is: ', np.mean(errs), np.max(errs))
-        import scipy.stats as st
         import random
+
+        import scipy.stats as st
         sampled_errs = []
         for i in range(100):
             _errs = random.sample(errs,int(0.7*len(errs)))
