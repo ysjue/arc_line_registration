@@ -23,7 +23,7 @@ data_list = data['Samples']
 trus_spots = []
 
 # data_list = [d for i,d in zip(range(len(data_list)),data_list) if i < 10 ] # luck sample
-data_list = [d for i,d in zip(range(len(data_list)),data_list) if i not in [11,6]] # testset1 trus_spots = []
+data_list = [d for i,d in zip(range(len(data_list)),data_list) if i not in [11,6]] # testset1 
 trus_spots_gt = []
 keys = ['TRUS1','TRUS2', 'TRUS3','TRUS4']
 

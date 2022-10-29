@@ -115,10 +115,15 @@ def main(idx = 0):
     [ 8.68272044e-01 , 4.86918007e-01 , 9.49447830e-02 ,-3.89869408e+01],
     [-2.27733530e-02,  2.30307031e-01, -9.72851503e-01,  2.21642210e+02],
     [ 0.00000000e+00,  0.00000000e+00 , 0.00000000e+00 , 1.00000000e+00]])
+
     Freg2 = np.array([[-5.01887243e-01 , 8.59661138e-01 ,-9.53515754e-02 , 8.68234754e+00],
     [ 8.53532874e-01 , 5.10093156e-01,  1.06238433e-01 ,-3.88006352e+01],
     [ 1.39967238e-01, -2.80659899e-02, -9.89758290e-01,  2.21411589e+02],
     [ 0.00000000e+00 , 0.00000000e+00,  0.00000000e+00 , 1.00000000e+00]])
+    Freg2 = np.array([[-5.04858221e-01 , 8.46691849e-01 , 1.68021099e-01 ,-9.00139506e+00],
+ [ 8.54815052e-01,  5.17458579e-01,-3.90876802e-02 ,-3.49800620e+01],
+ [-1.20039179e-01,  1.23893228e-01, -9.85008154e-01,  2.25599780e+02],
+ [ 0.00000000e+00 , 0.00000000e+00 , 0.00000000e+00,  1.00000000e+00]])
 
     x = np.array([0,20])
     result1 = least_squares(fun, x,\
@@ -136,7 +141,7 @@ def main(idx = 0):
     trus_spot_pred2 = np.array([u,-(v+0.01) * np.sin(t_pred2*np.pi/180.0), (v+0.01) * np.cos(t_pred2*np.pi/180.0)]) * 1000 
     tre1 = np.linalg.norm(trus_spot_gt - trus_spot_pred1)
     tre2 = np.linalg.norm(trus_spot_gt - trus_spot_pred2)
-    return result1.x[0]+t, result2.x[0]+t,gt_theta,tre1,tre2
+    return result1.x[0]+t, result2.x[0]+t, gt_theta, tre1, tre2
 
 
 
@@ -177,7 +182,7 @@ if __name__ == '__main__':
     lower, upper = st.t.interval(alpha=0.95, df=len(tracking_err2)-1, 
                             loc=np.mean(tracking_err2), 
                             scale=st.sem(tracking_err2)) 
-    print(np.mean(tracking_err2),lower, upper)
+    print(np.mean(tracking_err2), lower, upper)
 
     lower, upper = st.t.interval(alpha=0.95, df=len(reg_err1)-1, 
                             loc=np.mean(reg_err1), 
