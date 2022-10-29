@@ -17,7 +17,7 @@ with open('./data/fitting_set1.yaml') as stream:
 data_list = data['Samples']
 trus_spots = []
 
-data_list = [d for i,d in zip(range(len(data_list)),data_list) if i < 10 ] # luck sample
+# data_list = [d for i,d in zip(range(len(data_list)),data_list) if i < 10 ] # luck sample
 data_list = [d for i,d in zip(range(len(data_list)),data_list) if i not in [11,6] ] # testset1 
 for d in data_list:
     theta = d['TRUS1']['angle']

@@ -10,7 +10,15 @@ from scipy.optimize import least_squares
 
 def main(idx = 0):
     file_path = './data/testset1'
-    trus_samples_txt = [f for f in os.listdir(file_path) if 'sample' in f and 'cam' not in f]
+    trus_samples_files = [f for f in os.listdir(file_path) if 'sample' in f and 'cam' not in f]
+    trus_samples_txt = []
+
+    # regorder the input file
+    for i in range(len(trus_samples_files)):
+        txt = [f for f in trus_samples_files if '-'+str(i+1)+'.txt' in f]
+        assert len(txt) == 1
+        trus_samples_txt.append(txt[0])
+        
     cam_txt = os.path.join(file_path, 'sample_cam.txt')
     samples = []
     data_dict = {'Samples':[]}
@@ -33,7 +41,7 @@ def main(idx = 0):
         cam2marker_transforms.append(rotm)
 
 
-    for sample_txt in trus_samples_txt:
+    for ii, sample_txt in enumerate(trus_samples_txt):
         sample_txt = os.path.join(file_path, sample_txt)
         sample = []
         with open(sample_txt,'r') as f:
@@ -62,12 +70,14 @@ def main(idx = 0):
     gt_sample = [[sample[0,:][np.argmax(sample[-1,:])], sample[1,:][np.argmax(sample[-1,:])],\
                         sample[2,:][np.argmax(sample[-1,:])]] for sample in samples]
     gt_sample = np.array(gt_sample)
-
-    weight = 1 * (np.random.rand() > 0.5)
-    deviation = int((-5 + np.random.rand()*4)*weight + (1-weight)*(1+ np.random.rand()*4))
-    sample = [[sample[0,:][np.argmax(sample[-1,:])+deviation], sample[1,:][np.argmax(sample[-1,:])+deviation],\
-                        sample[2,:][np.argmax(sample[-1,:])+deviation]] for sample in samples]
-    sample = np.array(sample)
+    
+    selected_samples = []
+    for sample in samples:
+        weight = 1 * (np.random.rand() > 0.5)
+        deviation = int((-5 + np.random.rand()*4)*weight + (1-weight)*(1+ np.random.rand()*4))
+        index = np.argmax(sample[-1,:])+deviation
+        selected_samples.append(sample[:3,index])
+    sample = np.array(selected_samples)
 
     
     gt_theta  = gt_sample[idx,0]
@@ -93,14 +103,22 @@ def main(idx = 0):
 
 
     Freg1 = np.array([[-5.11389303e-01,  8.34014301e-01 , 2.07125871e-01, -1.03291442e+01],
- [ 8.58427904e-01 , 5.06938286e-01 , 7.81991510e-02 ,-3.77768171e+01],
- [-3.97808236e-02 , 2.17792837e-01 ,-9.75183965e-01 , 2.22573185e+02],
- [ 0.00000000e+00,  0.00000000e+00 , 0.00000000e+00 , 1.00000000e+00]])
+    [ 8.58427904e-01 , 5.06938286e-01 , 7.81991510e-02 ,-3.77768171e+01],
+    [-3.97808236e-02 , 2.17792837e-01 ,-9.75183965e-01 , 2.22573185e+02],
+    [ 0.00000000e+00,  0.00000000e+00 , 0.00000000e+00 , 1.00000000e+00]])
+    Freg1 = np.array([[-5.07173219e-01,  8.55084447e-01,  1.07730748e-01, -4.43122490e+00],
+    [ 8.59657118e-01,  4.93018959e-01,  1.33872871e-01,-4.12765597e+01],
+    [ 6.13593091e-02,  1.60508239e-01, -9.85125444e-01,  2.21979905e+02],
+    [ 0.00000000e+00,  0.00000000e+00,  0.00000000e+00,  1.00000000e+00]])
 
-    Freg2 = np.array([[-4.90131121e-01,  8.10192465e-01,  3.21495962e-01, -1.58370396e+01],
- [ 8.70931215e-01,  4.70161410e-01,  1.42923291e-01, -4.09868718e+01],
- [-3.53596208e-02,  3.50052021e-01, -9.36062647e-01,  2.20433216e+02],
- [ 0.00000000e+00 , 0.00000000e+00,  0.00000000e+00,  1.00000000e+00]])
+    Freg2 = np.array([[-4.95565366e-01,  8.42537551e-01 , 2.11057912e-01, -1.07281469e+01],
+    [ 8.68272044e-01 , 4.86918007e-01 , 9.49447830e-02 ,-3.89869408e+01],
+    [-2.27733530e-02,  2.30307031e-01, -9.72851503e-01,  2.21642210e+02],
+    [ 0.00000000e+00,  0.00000000e+00 , 0.00000000e+00 , 1.00000000e+00]])
+    Freg2 = np.array([[-5.01887243e-01 , 8.59661138e-01 ,-9.53515754e-02 , 8.68234754e+00],
+    [ 8.53532874e-01 , 5.10093156e-01,  1.06238433e-01 ,-3.88006352e+01],
+    [ 1.39967238e-01, -2.80659899e-02, -9.89758290e-01,  2.21411589e+02],
+    [ 0.00000000e+00 , 0.00000000e+00,  0.00000000e+00 , 1.00000000e+00]])
 
     x = np.array([0,20])
     result1 = least_squares(fun, x,\
@@ -113,7 +131,7 @@ def main(idx = 0):
     t_pred1 = result1.x[0]+t
     t_pred2 = result2.x[0]+t
     print(result1.x[0]+t,result2.x[0]+t,gt_theta)
-    print(result1.cost,result2.cost)
+    # print(result1.cost,result2.cost)
     trus_spot_pred1 = np.array([u,-(v+0.01) * np.sin(t_pred1*np.pi/180.0), (v+0.01) * np.cos(t_pred1*np.pi/180.0)]) * 1000 
     trus_spot_pred2 = np.array([u,-(v+0.01) * np.sin(t_pred2*np.pi/180.0), (v+0.01) * np.cos(t_pred2*np.pi/180.0)]) * 1000 
     tre1 = np.linalg.norm(trus_spot_gt - trus_spot_pred1)
@@ -136,6 +154,7 @@ if __name__ == '__main__':
         costs1 = []
         costs2 = []
         for i in range(5):
+          
             t1, t2,gt_t,cost1,cost2 = main(idx = i)
             point_line_tracking_error.append(np.abs(gt_t - t1))
             arc_line_tracking_error.append(np.abs(gt_t - t2))

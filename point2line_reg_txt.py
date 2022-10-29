@@ -90,6 +90,10 @@ ax.set_zlabel('Z Label (mm)')
 solver1 = Solver(geo_consist=False)
 
 F1,error,lower,upper = solver1.solve(trus_spots, cam_laser_start_spots,cam_N, F0=identity_matrix())
+F1 = np.array([[-5.11389303e-01,  8.34014301e-01 , 2.07125871e-01, -1.03291442e+01],
+ [ 8.58427904e-01 , 5.06938286e-01 , 7.81991510e-02 ,-3.77768171e+01],
+ [-3.97808236e-02 , 2.17792837e-01 ,-9.75183965e-01 , 2.22573185e+02],
+ [ 0.00000000e+00,  0.00000000e+00 , 0.00000000e+00 , 1.00000000e+00]])
 x_pred, cam_spots_pred1 = solver1.output()
 print(error,x_pred)
 trus_laser_start_spots = np.linalg.inv(F1)[:3,:3] @ cam_laser_start_spots + np.linalg.inv(F1)[:3,3][:,None]
@@ -100,11 +104,11 @@ for i in range(trus_spots_pred1.shape[1]):
     ax.scatter(trus_laser_start_spots[0,i], trus_laser_start_spots[1,i], trus_laser_start_spots[2,i], marker='*',color=colors[i if i < 11 else 10])
 
     ax.scatter(trus_spots[0,i], trus_spots[1,i], trus_spots[2,i], marker='o',color=colors[i if i < 11 else 10])
-    # ax.scatter(trus_spots_pred1[0,i], trus_spots_pred1[1,i], trus_spots_pred1[2,i], marker='x',color=colors[i if i < 11 else 10])
-    # trus_N = F[:3,:3].T@cam_N
+    ax.scatter(trus_spots_pred1[0,i], trus_spots_pred1[1,i], trus_spots_pred1[2,i], marker='x',color=colors[i if i < 11 else 10])
+    trus_N = F1[:3,:3].T@cam_N
     
-    # ax.quiver(trus_laser_start_spots[0,i], trus_laser_start_spots[1,i], trus_laser_start_spots[2,i],\
-    #             trus_N[0,i],trus_N[1,i], trus_N[2,i],\
-    #             length = x_pred[i],color=colors[i if i < 11 else 10])
+    ax.quiver(trus_laser_start_spots[0,i], trus_laser_start_spots[1,i], trus_laser_start_spots[2,i],\
+                trus_N[0,i],trus_N[1,i], trus_N[2,i],\
+                length = x_pred[i],color=colors[i if i < 11 else 10])
 
 plt.show()
