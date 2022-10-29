@@ -15,8 +15,15 @@ from utils.transformations import (identity_matrix, quaternion_matrix,
                                    rotation_from_matrix, rotation_matrix,
                                    translation_matrix, unit_vector)
 
-file_path = './data/testset1'
-trus_samples_txt = [f for f in os.listdir(file_path) if 'testset' in f and 'cam' not in f]
+designated_testing_pairs = ['1.txt','4.txt','8.txt','14.txt','11.txt']
+file_path = './data/testset2'
+trus_samples_files = [f for f in os.listdir(file_path) if 'sample' in f and 'cam' not in f]
+trus_samples_txt = []
+for i in range(len(trus_samples_files)):
+        txt = [f for f in trus_samples_files if 'sample'+str(i+1)+'.txt' in f]
+        assert len(txt) == 1
+        trus_samples_txt.append(txt[0])
+trus_samples_txt = [f for f in trus_samples_txt if np.all([d not in f for d in designated_testing_pairs])]
 cam_txt = os.path.join(file_path, 'testset_cam.txt')
 samples = []
 data_dict = {'Samples':[]}
@@ -37,7 +44,8 @@ for i in range(int(len(cam_samples)/2)):
     rotm = quaternion_matrix(cam_samples[int(len(cam_samples)/2+ i)])
     rotm[:3,3] = translation*1000
     cam2marker_transforms.append(rotm)
-
+cam2marker_transforms = [ transform  for i,transform in enumerate(cam2marker_transforms) \
+                                if i+1 not in [int(d.split('.txt')[0]) for d in designated_testing_pairs ]]
 
 for sample_txt in trus_samples_txt:
     sample_txt = os.path.join(file_path, sample_txt)
@@ -53,7 +61,8 @@ for sample_txt in trus_samples_txt:
     sample = np.array(sample)
     samples.append(sample)
 
-samples = samples[:13]+samples[14:]
+
+
 direc_vec = unit_vector( np.array([ 0.03135577,  0.21365248, -0.97640639]))
 cam2marker_transforms = cam2marker_transforms[:13]+cam2marker_transforms[14:]
 cam_N = [unit_vector(cam2marker_transforms[i][:3,:3] @ direc_vec[:,None]) for i in range(len(cam2marker_transforms))]
@@ -72,16 +81,27 @@ acc_u = acc_sample[:,1] * 1000 # unit: mm
 acc_v = acc_sample[:,2] * 1000 # unit: mm
 acc_intensity= acc_sample[:,-1]
 
-# deviation = int(-5 + np.random.rand()*10)
-# sample = [[sample[0,:][np.argmax(sample[-1,:])+deviation], sample[1,:][np.argmax(sample[-1,:])+deviation],\
-#                     sample[2,:][np.argmax(sample[-1,:])+deviation]] for sample in samples]
-# sample = np.array(sample)
+selected_samples = []
+for sample in samples:
+    weight = 1 * (np.random.rand() > 0.5)
+    deviation = int((-5 + np.random.rand()*4)*weight + (1-weight)*(1+ np.random.rand()*4))
+    index = np.argmax(sample[-1,:])+deviation
+    selected_samples.append(sample[:3,index])
+noisy_sample = np.array(selected_samples)
 
-trus_spots = np.concatenate([acc_u[None,:],        # x axis
+noisy_theta = noisy_sample[:,0]
+noisy_u = noisy_sample[:,1] * 1000 # unit: mm
+noisy_v = noisy_sample[:,2] * 1000 # unit: mm
+noisy_intensity= noisy_sample[:,-1]
+
+trus_spots_acc = np.concatenate([acc_u[None,:],        # x axis
                                     -1*(10+acc_v)*np.sin(acc_theta*np.pi/180.0)[None,:],  # y axis
                                         (10+acc_v)*np.cos(acc_theta*np.pi/180.0)[None,:]], axis=0) # z axis
-# trus_spot = np.array([u, -1*v*np.sin(t*np.pi/180), v*np.cos(t*np.pi/180)])*1000
+trus_spots_noisy = np.concatenate([noisy_u[None,:],        # x axis
+                                    -1*(10+noisy_v)*np.sin(noisy_theta*np.pi/180.0)[None,:],  # y axis
+                                        (10+noisy_v)*np.cos(noisy_theta*np.pi/180.0)[None,:]], axis=0) # z axis
 
+trus_spots = trus_spots_noisy
 # visualization
 colors = ['b','g','r','c','m','y','k','brown','gold','teal','plum']
 fig = plt.figure()
@@ -137,7 +157,8 @@ while error2 < lst_error2:
 F2=lst_F2
 print('error1: ', error,lower,upper)
 print('error2: ', error2,lower2,upper2)
-print(F2)
+print('F1: \n', F1)
+print('F2: \n', F2)
 
 trus_laser_start_spots = np.linalg.inv(F2)[:3,:3] @ cam_laser_start_spots + np.linalg.inv(F2)[:3,3][:,None]
 trus_spots_pred2 = (np.linalg.inv(F2) @ homo(cam_spots_pred))[:-1,:]

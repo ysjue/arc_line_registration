@@ -10,9 +10,18 @@ import math
 from scipy.optimize import least_squares
 import os
 
-file_path = './data/testset1'
-trus_samples_txt = [f for f in os.listdir(file_path) if 'sample' in f and 'cam' not in f]
-cam_txt = os.path.join(file_path, 'sample_cam.txt')
+designated_testing_pairs = ['1.txt','4.txt','8.txt','14.txt','11.txt']
+
+file_path = './data/testset2'
+trus_samples_files = [f for f in os.listdir(file_path) if 'sample' in f and 'cam' not in f]
+trus_samples_txt = []
+for i in range(len(trus_samples_files)):
+        txt = [f for f in trus_samples_files if 'sample'+str(i+1)+'.txt' in f]
+        assert len(txt) == 1
+        trus_samples_txt.append(txt[0])
+# trus_samples_txt = trus_samples_txt[:10]
+trus_samples_txt = [f for f in trus_samples_txt if np.all([d not in f for d in designated_testing_pairs])]
+cam_txt = os.path.join(file_path, 'testset_cam.txt')
 samples = []
 data_dict = {'Samples':[]}
 cams = []
@@ -32,8 +41,9 @@ for i in range(int(len(cam_samples)/2)):
     rotm = quaternion_matrix(cam_samples[int(len(cam_samples)/2+ i)])
     rotm[:3,3] = translation*1000
     cam2marker_transforms.append(rotm)
-
-
+# cam2marker_transforms = cam2marker_transforms[:10]
+cam2marker_transforms = [ transform  for i,transform in enumerate(cam2marker_transforms) \
+                                if i+1 not in [int(d.split('.txt')[0]) for d in designated_testing_pairs ]]
 for sample_txt in trus_samples_txt:
     sample_txt = os.path.join(file_path, sample_txt)
     sample = []
@@ -48,13 +58,11 @@ for sample_txt in trus_samples_txt:
     sample = np.array(sample)
     samples.append(sample)
 
-# samples = [sample for i, sample in zip(range(len(samples)), samples) if i not in [11,  2,  7,  4, 12,  6, 13,  9,  1]]
-# cam2marker_transforms = [transform for i, transform in zip(range(len(cam2marker_transforms)),\
-#                      cam2marker_transforms)  if i not in [11,  2 , 7  ,4, 12 , 6, 13,  9,  1]]
-direc_vec = unit_vector( np.array([-0.32871691, -0.10795516, -0.93823]))
+
+direc_vec = unit_vector( np.array([ 0.03135577,  0.21365248, -0.97640639]))
 
 cam_N = [unit_vector(cam2marker_transforms[i][:3,:3] @ direc_vec[:,None]) for i in range(len(cam2marker_transforms))]
-cam_laser_start_spots = [cam2marker_transforms[i] @ np.array([ 49.9973,  18.979, -19.69427,1])[:,None] \
+cam_laser_start_spots = [cam2marker_transforms[i] @ np.array([37.64178, -14.98675, -2.07052,1])[:,None] \
                              for i in range(len(cam2marker_transforms))]
 # fitted results:  [ 0.08478048  0.03536605 -0.1202362 ] [-0.21044382 -0.05426389  0.97609878]
 cam_N = np.concatenate(cam_N,axis=1)
@@ -90,16 +98,12 @@ ax.set_zlabel('Z Label (mm)')
 solver1 = Solver(geo_consist=False)
 
 F1,error,lower,upper = solver1.solve(trus_spots, cam_laser_start_spots,cam_N, F0=identity_matrix())
-F1 = np.array([[-5.11389303e-01,  8.34014301e-01 , 2.07125871e-01, -1.03291442e+01],
- [ 8.58427904e-01 , 5.06938286e-01 , 7.81991510e-02 ,-3.77768171e+01],
- [-3.97808236e-02 , 2.17792837e-01 ,-9.75183965e-01 , 2.22573185e+02],
- [ 0.00000000e+00,  0.00000000e+00 , 0.00000000e+00 , 1.00000000e+00]])
 x_pred, cam_spots_pred1 = solver1.output()
-print(error,x_pred)
+print(error)
 trus_laser_start_spots = np.linalg.inv(F1)[:3,:3] @ cam_laser_start_spots + np.linalg.inv(F1)[:3,3][:,None]
 
 trus_spots_pred1 = (np.linalg.inv(F1) @ homo(cam_spots_pred1))[:-1,:]
-
+print('F1: \n', F1)
 for i in range(trus_spots_pred1.shape[1]):
     ax.scatter(trus_laser_start_spots[0,i], trus_laser_start_spots[1,i], trus_laser_start_spots[2,i], marker='*',color=colors[i if i < 11 else 10])
 
