@@ -9,7 +9,7 @@ from Solver.point_line_registration import LeastSquare_Solver as Solver
 import yaml
 import math 
 
-with open('./data/fitting_set1.yaml') as stream:
+with open('./data/luck_sample.yaml') as stream:
     try:
         data = yaml.safe_load((stream))
     except yaml.YAMLERROIR as exc:
@@ -17,8 +17,8 @@ with open('./data/fitting_set1.yaml') as stream:
 data_list = data['Samples']
 trus_spots = []
 
-# data_list = [d for i,d in zip(range(len(data_list)),data_list) if i < 10 ] # luck sample
-data_list = [d for i,d in zip(range(len(data_list)),data_list) if i not in [11,6] ] # testset1 
+data_list = [d for i,d in zip(range(len(data_list)),data_list) if i < 10 ] # luck sample
+# data_list = [d for i,d in zip(range(len(data_list)),data_list) if i not in [11,6] ] # testset1 
 for d in data_list:
     theta = d['TRUS1']['angle']
     u = d['TRUS1']['u']
@@ -43,17 +43,17 @@ for i in range(len(cam2marker_rotms)):
     cam2marker_transforms.append(rotm)
 cam2marker_transforms = np.array(cam2marker_transforms)
 
-# direc_vec = unit_vector( np.array([0.09555974, -0.05413993, -0.9939503]))
-
-# cam_N = [unit_vector(cam2marker_transforms[i][:3,:3] @ direc_vec[:,None]) for i in range(len(cam2marker_transforms))]
-# cam_laser_start_spots = [cam2marker_transforms[i] @ np.array([7.08929, 58.31985, -2.49508,1])[:,None] \
-#                              for i in range(len(cam2marker_transforms))]
-# fitted results:   [ 0.05312492  0.01149978 -0.02062431] [-0.35008202 -0.05933228 -0.93483809]
-direc_vec = unit_vector(np.array([-0.32871691, -0.10795516, -0.93823]))
+direc_vec = unit_vector( np.array([0.09555974, -0.05413993, -0.9939503]))
 
 cam_N = [unit_vector(cam2marker_transforms[i][:3,:3] @ direc_vec[:,None]) for i in range(len(cam2marker_transforms))]
-cam_laser_start_spots = [cam2marker_transforms[i] @ np.array([ 49.9973,  18.979, -19.69427,1])[:,None] \
-                            for i in range(len(cam2marker_transforms))]
+cam_laser_start_spots = [cam2marker_transforms[i] @ np.array([7.08929, 58.31985, -2.49508,1])[:,None] \
+                             for i in range(len(cam2marker_transforms))]
+# fitted results:   [ 0.05312492  0.01149978 -0.02062431] [-0.35008202 -0.05933228 -0.93483809]
+# direc_vec = unit_vector(np.array([-0.32871691, -0.10795516, -0.93823]))
+
+# cam_N = [unit_vector(cam2marker_transforms[i][:3,:3] @ direc_vec[:,None]) for i in range(len(cam2marker_transforms))]
+# cam_laser_start_spots = [cam2marker_transforms[i] @ np.array([ 49.9973,  18.979, -19.69427,1])[:,None] \
+#                             for i in range(len(cam2marker_transforms))]
 cam_N = np.concatenate(cam_N,axis=1)
 cam_laser_start_spots = np.concatenate(cam_laser_start_spots,axis = 1)[:3]
 

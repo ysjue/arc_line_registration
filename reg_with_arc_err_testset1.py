@@ -14,7 +14,7 @@ from utils.transformations import (identity_matrix, quaternion_matrix,
                                    rotation_from_matrix, rotation_matrix,
                                    translation_matrix, unit_vector)
 
-with open('./data/luck_sample.yaml') as stream:
+with open('./data/fitting_set1.yaml') as stream:
     try:
         data = yaml.safe_load((stream))
     except yaml.YAMLERROIR as exc:
@@ -22,14 +22,15 @@ with open('./data/luck_sample.yaml') as stream:
 data_list = data['Samples']
 trus_spots = []
 
-data_list = [d for i,d in zip(range(len(data_list)),data_list) if i < 10 ] # luck sample
-# data_list = [d for i,d in zip(range(len(data_list)),data_list) if i not in [11,6]] # testset1 
+# data_list = [d for i,d in zip(range(len(data_list)),data_list) if i < 10 ] # luck sample
+data_list = [d for i,d in zip(range(len(data_list)),data_list) if i not in [11,6]] # testset1 
 trus_spots_gt = []
 keys = ['TRUS1','TRUS2', 'TRUS3','TRUS4']
 
-sample_num = 7
-sample_idxes = random.sample(range(10),sample_num)
-sample_idxes = [1,0,9,6,8]
+# sample_num = 7
+# sample_idxes = random.sample(range(10),sample_num)
+sample_idxes = [0,1,2,3,4,5,7,8,9,10]
+sample_idxes = [7,1,2,8,10,5]
 print(sample_idxes)
 select_data_list = []
 for d in data_list:
@@ -56,7 +57,7 @@ thetas_gt = np.array(thetas_gt)
 thetas = []
 for d in data_list:
     key = random.sample(keys,1)[0] # 'TRUS1'
-    # key = 'TRUS1'
+    key = 'TRUS1'
     theta = d[key]['angle']
     u = d[key]['u']
     v = d[key]['v']
@@ -81,19 +82,19 @@ for i in range(len(cam2marker_rotms)):
 cam2marker_transforms = np.array(cam2marker_transforms)
 
 # # For the luck dataset
-direc_vec = unit_vector( np.array([0.09555974, -0.05413993, -0.9939503]))
-
-cam_N = [unit_vector(cam2marker_transforms[i][:3,:3] @ direc_vec[:,None]) for i in range(len(cam2marker_transforms))]
-cam_laser_start_spots = [cam2marker_transforms[i] @ np.array([7.08929, 58.31985, -2.49508,1])[:,None] \
-                             for i in range(len(cam2marker_transforms))]
-
-# [7, 3, 4, 1, 0, 9]
-# For the fitting_set1
-# direc_vec = unit_vector(np.array([-0.32871691, -0.10795516, -0.93823]))
+# direc_vec = unit_vector( np.array([0.09555974, -0.05413993, -0.9939503]))
 
 # cam_N = [unit_vector(cam2marker_transforms[i][:3,:3] @ direc_vec[:,None]) for i in range(len(cam2marker_transforms))]
-# cam_laser_start_spots = [cam2marker_transforms[i] @ np.array([ 49.9973,  18.979, -19.69427,1])[:,None] \
-#                             for i in range(len(cam2marker_transforms))]
+# cam_laser_start_spots = [cam2marker_transforms[i] @ np.array([7.08929, 58.31985, -2.49508,1])[:,None] \
+                            #  for i in range(len(cam2marker_transforms))]
+
+
+# For the fitting_set1
+direc_vec = unit_vector(np.array([-0.32871691, -0.10795516, -0.93823]))
+
+cam_N = [unit_vector(cam2marker_transforms[i][:3,:3] @ direc_vec[:,None]) for i in range(len(cam2marker_transforms))]
+cam_laser_start_spots = [cam2marker_transforms[i] @ np.array([ 49.9973,  18.979, -19.69427,1])[:,None] \
+                            for i in range(len(cam2marker_transforms))]
 cam_N = np.concatenate(cam_N,axis=1)
 cam_laser_start_spots = np.concatenate(cam_laser_start_spots,axis = 1)[:3]
 # cam_laser_start_spots=cam_laser_start_spots[:,np.asarray(sample_idxes,dtype=np.int8)]
@@ -173,7 +174,8 @@ for i in range(trus_spots_pred2.shape[1]):
     ax.scatter(trus_spots_pred2[0,i], trus_spots_pred2[1,i], trus_spots_pred2[2,i], marker='^',color=colors[i if i < 11 else 10])
     ax.scatter(trus_spots[0,i], trus_spots[1,i], trus_spots[2,i], marker='o',color=colors[i if i < 11 else 10])
     ax.scatter(trus_spots_pred1[0,i], trus_spots_pred1[1,i], trus_spots_pred1[2,i], marker='x',color=colors[i if i < 11 else 10])
-    ax.text(trus_spots[0,i], trus_spots[1,i], trus_spots[2,i], str(i), color='red')
+   
+    ax.text(trus_spots[0,i], trus_spots[1,i], trus_spots[2,i], str(sample_idxes[i]), color='red')
     # trus_N = F[:3,:3].T@cam_N
     
     # ax.quiver(trus_laser_start_spots[0,i], trus_laser_start_spots[1,i], trus_laser_start_spots[2,i],\

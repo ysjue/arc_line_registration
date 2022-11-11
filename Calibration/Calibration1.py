@@ -93,11 +93,10 @@ for time in range(RANSAC_times):
                 ax.plot(np.array([best_fit[0],lst_best_fit[0]]),np.array([best_fit[1],lst_best_fit[1]]),np.array([best_fit[2],lst_best_fit[2]]),'red')
             lst_best_fit = best_fit
 
-                
-        
-        print('residual error is: ', np.mean(errs), np.max(errs))
-        import random
 
+        print('residual error is: ', np.mean(errs), np.max(errs))
+        
+        import random
         import scipy.stats as st
         sampled_errs = []
         for i in range(100):

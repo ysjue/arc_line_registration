@@ -88,7 +88,7 @@ def main(idx = 0):
     t = sample[idx,0]
     u = sample[idx,1]
     v = sample[idx,2]
-    trus_spot_gt = np.array([gt_u, -1*(gt_v+0.01)*np.sin(t*np.pi/180), (gt_v+0.01)*np.cos(t*np.pi/180)])*1000
+    trus_spot_gt = np.array([gt_u, -1*(gt_v+0.01)*np.sin(gt_theta*np.pi/180), (gt_v+0.01)*np.cos(gt_theta*np.pi/180)])*1000
     cam_laser_start_spot = cam_laser_start_spots[:,idx] 
     cam_N = cam_Ns[:,idx]
     def fun(x, u, v, sampled_theta, cam_laser_start_spots, cam_N, Freg):

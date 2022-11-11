@@ -99,7 +99,7 @@ for time in range(RANSAC_times):
         errs = []
         coefficients = []
         for i in range(len(local_points)):
-            coefficient,err,_,_ = np.linalg.lstsq(direc_vec[:,None], local_points[i][:,None] - data_mean[:,None],rcond=None)
+            coefficient,err,_,_ = np.linalg.lstsq(direc_vec[:,None], local_points[i][:,None] - data_mean[:,None], rcond=None)
             best_fit = direc_vec * coefficient[0][0] + data_mean
             coefficients.append(coefficient[0][0])
             err = np.linalg.norm(local_points[i] - best_fit)
@@ -112,10 +112,9 @@ for time in range(RANSAC_times):
             lst_best_fit = best_fit
 
                 
-        
         print('residual error is: ', np.mean(errs), np.max(errs))
+        
         import random
-
         import scipy.stats as st
         sampled_errs = []
         for i in range(100):

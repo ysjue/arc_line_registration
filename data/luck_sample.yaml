@@ -464,7 +464,7 @@ Samples:
       intensity: 18.19
 
     TRUS2:
-      angle: 24
+      angle: 26 #24
       u: 0.0119
       v: 0.0442
       intensity: 13
@@ -492,7 +492,7 @@ Samples:
       intensity: 9.7
 
     TRUS2:
-      angle: 15
+      angle: 22 #15
       u: -0.0118
       v: 0.0422
       intensity: 8.1
@@ -509,7 +509,7 @@ Samples:
       intensity: 10.4
 
     TRUS2:
-      angle: 25
+      angle: 25 
       u: 0.0000
       v: 0.0434
       intensity: 7.9

@@ -87,7 +87,7 @@ def main(idx = 0):
     t = sample[idx,0]
     u = sample[idx,1]
     v = sample[idx,2]
-    trus_spot_gt = np.array([gt_u, -1*(gt_v+0.01)*np.sin(t*np.pi/180), (gt_v+0.01)*np.cos(t*np.pi/180)])*1000
+    trus_spot_gt = np.array([gt_u, -1*(gt_v+0.01)*np.sin(gt_theta*np.pi/180), (gt_v+0.01)*np.cos(gt_theta*np.pi/180)])*1000
     cam_laser_start_spot = cam_laser_start_spots[:,idx] 
     cam_N = cam_Ns[:,idx]
     def fun(x, u, v, sampled_theta, cam_laser_start_spots, cam_N, Freg):
@@ -120,10 +120,23 @@ def main(idx = 0):
     [ 8.53532874e-01 , 5.10093156e-01,  1.06238433e-01 ,-3.88006352e+01],
     [ 1.39967238e-01, -2.80659899e-02, -9.89758290e-01,  2.21411589e+02],
     [ 0.00000000e+00 , 0.00000000e+00,  0.00000000e+00 , 1.00000000e+00]])
-    Freg2 = np.array([[-5.04858221e-01 , 8.46691849e-01 , 1.68021099e-01 ,-9.00139506e+00],
- [ 8.54815052e-01,  5.17458579e-01,-3.90876802e-02 ,-3.49800620e+01],
- [-1.20039179e-01,  1.23893228e-01, -9.85008154e-01,  2.25599780e+02],
- [ 0.00000000e+00 , 0.00000000e+00 , 0.00000000e+00,  1.00000000e+00]])
+#     Freg2 = np.array([[-5.04858221e-01 , 8.46691849e-01 , 1.68021099e-01 ,-9.00139506e+00],
+#  [ 8.54815052e-01,  5.17458579e-01,-3.90876802e-02 ,-3.49800620e+01],
+#  [-1.20039179e-01,  1.23893228e-01, -9.85008154e-01,  2.25599780e+02],
+#  [ 0.00000000e+00 , 0.00000000e+00 , 0.00000000e+00,  1.00000000e+00]])
+    
+    Freg1 = np.array([[-2.84656484e-01  ,9.48866154e-01 ,-1.36468704e-01 , 1.17125212e+01],
+ [ 4.41734553e-01 , 2.56176748e-01 , 8.59793032e-01, -9.02642496e+01],
+ [ 8.50788617e-01,  1.84462720e-01 ,-4.92069339e-01 , 2.02644507e+02],
+ [ 0.00000000e+00 , 0.00000000e+00,  0.00000000e+00 , 1.00000000e+00]])
+    Freg1 = np.array([[-5.20344783e-01,  7.97912360e-01 , 3.04264971e-01 ,-1.62652138e+01],
+ [ 8.49434082e-01,  4.47001167e-01 , 2.80449100e-01, -5.07545386e+01],
+ [ 8.77670063e-02,  4.04383262e-01 ,-9.10368678e-01,  2.18483865e+02],
+ [ 0.00000000e+00,  0.00000000e+00 , 0.00000000e+00,  1.00000000e+00]])
+    Freg2 = np.array([[-3.30065859e-01,  9.25635276e-01 ,-1.85083400e-01,  1.42810048e+01],
+ [ 4.81862304e-01 , 3.33819461e-01,  8.10168678e-01 ,-8.66068754e+01],
+ [ 8.11705149e-01,  1.78224307e-01, -5.56211154e-01  ,2.04727333e+02],
+ [ 0.00000000e+00,  0.00000000e+00 , 0.00000000e+00,  1.00000000e+00]])
 
     x = np.array([0,20])
     result1 = least_squares(fun, x,\
@@ -135,19 +148,22 @@ def main(idx = 0):
                                     args=(u,v,t,cam_laser_start_spot[:,None],cam_N[:,None],Freg2))
     t_pred1 = result1.x[0]+t
     t_pred2 = result2.x[0]+t
-    print(result1.x[0]+t,result2.x[0]+t,gt_theta)
-    # print(result1.cost,result2.cost)
+    print(t,result1.x[0]+t,result2.x[0]+t,gt_theta)
+    
+    # u = gt_u
+    # v = gt_v
+
     trus_spot_pred1 = np.array([u,-(v+0.01) * np.sin(t_pred1*np.pi/180.0), (v+0.01) * np.cos(t_pred1*np.pi/180.0)]) * 1000 
     trus_spot_pred2 = np.array([u,-(v+0.01) * np.sin(t_pred2*np.pi/180.0), (v+0.01) * np.cos(t_pred2*np.pi/180.0)]) * 1000 
     tre1 = np.linalg.norm(trus_spot_gt - trus_spot_pred1)
     tre2 = np.linalg.norm(trus_spot_gt - trus_spot_pred2)
+    print(tre1,tre2)
     return result1.x[0]+t, result2.x[0]+t, gt_theta, tre1, tre2
-
 
 
 if __name__ == '__main__':
     
-    multiple_times = 100
+    multiple_times = 50
     tracking_err1 = []
     tracking_err2 = []
     reg_err1 = []
@@ -158,8 +174,7 @@ if __name__ == '__main__':
         arc_line_tracking_error = []
         costs1 = []
         costs2 = []
-        for i in range(5):
-          
+        for i in range(5):         
             t1, t2,gt_t,cost1,cost2 = main(idx = i)
             point_line_tracking_error.append(np.abs(gt_t - t1))
             arc_line_tracking_error.append(np.abs(gt_t - t2))
@@ -177,21 +192,21 @@ if __name__ == '__main__':
     lower, upper = st.t.interval(alpha=0.95, df=len(tracking_err1)-1, 
                             loc=np.mean(tracking_err1), 
                             scale=st.sem(tracking_err1)) 
-    print(np.mean(tracking_err1),lower, upper)
+    print(np.mean(tracking_err1),lower, upper,np.std(tracking_err1))
 
     lower, upper = st.t.interval(alpha=0.95, df=len(tracking_err2)-1, 
                             loc=np.mean(tracking_err2), 
                             scale=st.sem(tracking_err2)) 
-    print(np.mean(tracking_err2), lower, upper)
+    print(np.mean(tracking_err2), lower, upper,np.std(tracking_err2))
 
     lower, upper = st.t.interval(alpha=0.95, df=len(reg_err1)-1, 
                             loc=np.mean(reg_err1), 
                             scale=st.sem(reg_err1)) 
-    print(np.mean(reg_err1),lower, upper)
+    print(np.mean(reg_err1),lower, upper,np.std(reg_err1))
 
     lower, upper = st.t.interval(alpha=0.95, df=len(reg_err2)-1, 
                             loc=np.mean(reg_err2), 
                             scale=st.sem(reg_err2)) 
-    print(np.mean(reg_err2),lower, upper )
+    print(np.mean(reg_err2),lower, upper, np.std(reg_err2))
     
 
