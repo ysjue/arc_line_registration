@@ -27,9 +27,10 @@ data_list = [d for i,d in zip(range(len(data_list)),data_list) if i < 10 ] # luc
 trus_spots_gt = []
 keys = ['TRUS1','TRUS2', 'TRUS3','TRUS4']
 
-sample_num = 7
+sample_num = 4
 sample_idxes = random.sample(range(10),sample_num)
-sample_idxes = [1,0,9,6,8]
+# sample_idxes = [i for i in range(10)]
+sample_idxes = [2,5,1,7]
 print(sample_idxes)
 select_data_list = []
 for d in data_list:
@@ -38,7 +39,6 @@ for d in data_list:
 print(len(select_data_list))
 assert len(select_data_list) == len(sample_idxes)
 data_list = select_data_list
-
 
 thetas_gt = []
 for d in data_list:
@@ -50,13 +50,13 @@ for d in data_list:
     z = (0.01 + v ) * math.cos(theta/180.0 * math.pi)
     trus_spots_gt.append([u, y, z])
     thetas_gt.append(theta)
-trus_spots_gt = np.array(trus_spots).T * 1000 # convert to mm
+trus_spots_gt = np.array(trus_spots_gt).T * 1000 # convert to mm
 thetas_gt = np.array(thetas_gt)
 
 thetas = []
 for d in data_list:
     key = random.sample(keys,1)[0] # 'TRUS1'
-    # key = 'TRUS1'
+    key = 'TRUS1'
     theta = d[key]['angle']
     u = d[key]['u']
     v = d[key]['v']
@@ -115,6 +115,7 @@ F1,error,lower,upper = solver1.solve(trus_spots, cam_laser_start_spots,cam_N, F0
 x_pred, cam_spots_pred1 = solver1.output()
 
 
+
 trus_spots_arc = trus_spots
 def fun(theta,trus_spots,laser_spots_pred,Freg):
     rotms = [rotation_matrix(t*3.1415926/180.0,[1,0,0],[0,0,0]) for t in theta]
@@ -131,6 +132,8 @@ cam_spots_pred = cam_spots_pred1*1
 count = 0
 F = F1
 trus_spots_arc1 = trus_spots_arc
+errors_eval = [error]
+error2s = [error]
 while error2 < lst_error2: 
     count+=1
     theta = np.zeros(trus_spots.shape[1])
@@ -152,8 +155,14 @@ while error2 < lst_error2:
     solver2 = Solver(geo_consist=False)
     F2,error2,lower2,upper2 = solver2.solve(trus_spots_arc, cam_laser_start_spots,cam_N, F0=F)
     print('error2: ',error2 )
+    error2s.append(error2)
+  
     F = F2
     x_pred2, cam_spots_pred = solver2.output()
+    trus_spots_pred2 = (np.linalg.inv(F2) @ homo(cam_spots_pred))[:3]
+    error_eval = np.mean(np.linalg.norm(trus_spots_pred2 - trus_spots_gt, axis = 0))
+    errors_eval.append(error_eval)
+    print('validation error: ',error_eval )
     if error2 < 0.02 or count > 50:
         print("slight rotation")
         break
@@ -162,7 +171,8 @@ print('error1: ', error,lower,upper)
 print('error2: ', error2,lower2,upper2)
 print(F1)
 print(F2)
-
+print(error2s)
+print(errors_eval )
 trus_laser_start_spots = np.linalg.inv(F2)[:3,:3] @ cam_laser_start_spots + np.linalg.inv(F2)[:3,3][:,None]
 trus_spots_pred2 = (np.linalg.inv(F2) @ homo(cam_spots_pred))[:-1,:]
 trus_spots_pred1 = (np.linalg.inv(F1) @ homo(cam_spots_pred1))[:-1,:]

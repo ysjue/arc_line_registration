@@ -14,7 +14,7 @@ from utils.transformations import (identity_matrix, quaternion_matrix,
                                    rotation_from_matrix, rotation_matrix,
                                    translation_matrix, unit_vector)
 
-with open('./data/fitting_set1.yaml') as stream:
+with open('C:/Users/17242/Desktop/arc_line_registration/arc_line_registration/data/fitting_set1.yaml') as stream:
     try:
         data = yaml.safe_load((stream))
     except yaml.YAMLERROIR as exc:
@@ -27,18 +27,19 @@ data_list = [d for i,d in zip(range(len(data_list)),data_list) if i not in [11,6
 trus_spots_gt = []
 keys = ['TRUS1','TRUS2', 'TRUS3','TRUS4']
 
-# sample_num = 7
-# sample_idxes = random.sample(range(10),sample_num)
-sample_idxes = [0,1,2,3,4,5,7,8,9,10]
-sample_idxes = [7,1,2,8,10,5]
-print(sample_idxes)
-select_data_list = []
-for d in data_list:
-    if int(list(d.keys())[0].split('Sample')[-1])-1 in sample_idxes:
-        select_data_list.append(d)
-print(len(select_data_list))
-assert len(select_data_list) == len(sample_idxes)
-data_list = select_data_list
+# # sample_num = 7
+# # sample_idxes = random.sample(range(10),sample_num)
+# sample_idxes = [0,1,2,3,4,5,7,8,9,10]
+# # sample_idxes = random.sample(sample_idxes, 9)
+# # sample_idxes=[4, 9, 5, 1, 2, 10, 0, 3]
+# print(sample_idxes)
+# select_data_list = []
+# for d in data_list:
+#     if int(list(d.keys())[0].split('Sample')[-1])-1 in sample_idxes:
+#         select_data_list.append(d)
+# print(len(select_data_list))
+# assert len(select_data_list) == len(sample_idxes)
+# data_list = select_data_list
 
 
 thetas_gt = []
@@ -51,13 +52,13 @@ for d in data_list:
     z = (0.01 + v ) * math.cos(theta/180.0 * math.pi)
     trus_spots_gt.append([u, y, z])
     thetas_gt.append(theta)
-trus_spots_gt = np.array(trus_spots).T * 1000 # convert to mm
+trus_spots_gt = np.array(trus_spots_gt,dtype=np.float32).T * 1000 # convert to mm
 thetas_gt = np.array(thetas_gt)
 
 thetas = []
 for d in data_list:
     key = random.sample(keys,1)[0] # 'TRUS1'
-    key = 'TRUS1'
+    # key = 'TRUS1'
     theta = d[key]['angle']
     u = d[key]['u']
     v = d[key]['v']
@@ -110,8 +111,10 @@ ax.set_xlabel('X Label (mm)')
 ax.set_ylabel('Y Label (mm)')
 ax.set_zlabel('Z Label (mm)')
 
+solver0 = Solver(geo_consist=False)
 solver1 = Solver(geo_consist=False)
 solver2 = Solver(geo_consist=True)
+F_upper,_,_,_ = solver0.solve(trus_spots_gt, cam_laser_start_spots,cam_N, F0=identity_matrix())
 F1,error,lower,upper = solver1.solve(trus_spots, cam_laser_start_spots,cam_N, F0=identity_matrix())
 x_pred, cam_spots_pred1 = solver1.output()
 
@@ -132,6 +135,8 @@ cam_spots_pred = cam_spots_pred1*1
 count = 0
 F = F1
 trus_spots_arc1 = trus_spots_arc
+error2s = [error]
+errors_eval = [error]
 while error2 < lst_error2: 
     count+=1
     theta = np.zeros(trus_spots.shape[1])
@@ -153,17 +158,24 @@ while error2 < lst_error2:
     solver2 = Solver(geo_consist=False)
     F2,error2,lower2,upper2 = solver2.solve(trus_spots_arc, cam_laser_start_spots,cam_N, F0=F)
     print('error2: ',error2 )
+    error2s.append(error2)
     F = F2
     x_pred2, cam_spots_pred = solver2.output()
+    trus_spots_pred2 = (np.linalg.inv(F2) @ homo(cam_spots_pred))[:3]
+    error_eval = np.mean(np.linalg.norm(trus_spots_pred2 - trus_spots_gt, axis = 0))
+    errors_eval.append(error_eval)
+    print('validation error: ',error_eval )
     if error2 < 0.02 or count > 50:
         print("slight rotation")
         break
 F2=lst_F2
 print('error1: ', error,lower,upper)
 print('error2: ', error2,lower2,upper2)
-print(F1)
-print(F2)
-
+print('F0: \n','['+',\n'.join(['['+' ,'.join([str(c) for c in row ])+']' for row in F_upper])+']')
+print('F1: \n','['+',\n'.join(['['+' ,'.join([str(c) for c in row ])+']' for row in F1])+']')
+print('F2: \n','['+',\n'.join(['['+' ,'.join([str(c) for c in row ])+']' for row in F2])+']')
+print(error2s)
+print(errors_eval)
 trus_laser_start_spots = np.linalg.inv(F2)[:3,:3] @ cam_laser_start_spots + np.linalg.inv(F2)[:3,3][:,None]
 trus_spots_pred2 = (np.linalg.inv(F2) @ homo(cam_spots_pred))[:-1,:]
 trus_spots_pred1 = (np.linalg.inv(F1) @ homo(cam_spots_pred1))[:-1,:]
@@ -175,7 +187,7 @@ for i in range(trus_spots_pred2.shape[1]):
     ax.scatter(trus_spots[0,i], trus_spots[1,i], trus_spots[2,i], marker='o',color=colors[i if i < 11 else 10])
     ax.scatter(trus_spots_pred1[0,i], trus_spots_pred1[1,i], trus_spots_pred1[2,i], marker='x',color=colors[i if i < 11 else 10])
    
-    ax.text(trus_spots[0,i], trus_spots[1,i], trus_spots[2,i], str(sample_idxes[i]), color='red')
+    # ax.text(trus_spots[0,i], trus_spots[1,i], trus_spots[2,i], str(sample_idxes[i]), color='red')
     # trus_N = F[:3,:3].T@cam_N
     
     # ax.quiver(trus_laser_start_spots[0,i], trus_laser_start_spots[1,i], trus_laser_start_spots[2,i],\

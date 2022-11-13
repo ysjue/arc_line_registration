@@ -20,7 +20,7 @@ from utils.transformations import (identity_matrix, rotation_from_matrix,
 
 def main():
     # total number of pairs
-    line_num = 12
+    line_num = 10
     add_noise = True
 
     # construct ground truth spots w.r.t. trus frame 
@@ -62,6 +62,7 @@ def main():
     cam_N = Freg[:3,:3] @ trus_N
     a = homo(trus_spots)
     cam_spots = (Freg @ homo(trus_spots))[:-1,:]
+    trus_spots_gt = trus_spots
     trus_laser_start_spots = np.zeros_like(trus_spots)
     x = 15 + np.random.rand(line_num)*70.0
     for i in range(line_num):
@@ -91,11 +92,11 @@ def main():
         # trus_spots_noises = np.ones_like(trus_spots) * np.array([-1,-1,-2])[:,None]+\
         #                         np.random.rand(trus_spots.shape[0], trus_spots.shape[1])*np.array([2,2.0,4.0])[:,None]
         
-        rotation_sigma = 0.7
-        cam_spot_sigma = 5e-2
+        rotation_sigma = 1
+        cam_spot_sigma = 1
         u_sigma = 1e-3 # unit: mm
         v_sigma = 1e-3 # unit: mm
-        theta_noise = np.clip(rotation_sigma * np.random.randn(trus_spots.shape[1]),-3,3)+ theta_gt
+        theta_noise = np.clip(rotation_sigma * np.random.randn(trus_spots.shape[1]),-1.5,1.5)+ theta_gt
         u_noise = np.clip(u_sigma * np.random.randn(trus_spots.shape[1]),-2,2)+ u_gt
         v_noise = np.clip(v_sigma * np.random.randn(trus_spots.shape[1]),-2,2) + v_gt
         trus_spots_noises = np.concatenate([u_noise[None,:],        # x axis
@@ -106,8 +107,8 @@ def main():
                                         v_noise*np.cos((theta_gt+random_theta)*np.pi/180.0)[None,:]], axis=0) # z axis
         trus_spots     = trus_spots_noises
         for i in range(cam_N.shape[1]):
-            cam_N[:,i] = unit_vector(cam_N[:,i] + np.array([0.02 * random.random(), 0.02 * random.random(), -0.08 * random.random()]))
-        cam_laser_start_spots = cam_laser_start_spots + np.clip(cam_spot_sigma * np.random.randn(trus_spots.shape[1]),-4,4)
+            cam_N[:,i] = unit_vector(cam_N[:,i] + np.array([0.04 * random.random(), 0.04 * random.random(), -0.12 * random.random()]))
+        cam_laser_start_spots = cam_laser_start_spots + np.clip(cam_spot_sigma * np.random.randn(trus_spots.shape[1]),-5,5)
         
     F0,error0,lower0,upper0 = solver0.solve(trus_spots, cam_laser_start_spots, cam_N, F0=identity_matrix())
     F,error1,lower,upper = solver1.solve(trus_spots_arc, cam_laser_start_spots, cam_N, F0=identity_matrix())
@@ -129,12 +130,14 @@ def main():
     count = 0
     tolerance = 0
     trus_spots_arc1 = trus_spots_arc
-    while error2 < lst_error2: 
+    error2s = [error1]
+    errors_eval = [error1]
+    while count < 55: #error2 < lst_error2: 
         if np.abs(error2 - lst_error2) < 6e-4:
             tolerance += 1
             if tolerance > 10:
                 print('too small decline')
-                break
+                # break
         else:
             tolerance = 0
         count+=1
@@ -156,11 +159,17 @@ def main():
         solver2 = Solver(geo_consist=False)
         F2,error2,lower2,upper2 = solver2.solve(trus_spots_arc, cam_laser_start_spots,cam_N, F0=F)
         print('error2: ',error2 )
+        error2s.append(error2)
         F = F2
         x_pred2, cam_spots_pred = solver2.output()
+        trus_spots_pred2 = (np.linalg.inv(F2) @ homo(cam_spots_pred))[:3]
+        error_eval = np.mean(np.linalg.norm(trus_spots_pred2 - trus_spots_gt, axis = 0))
+        errors_eval.append(error_eval)
+        assert len(errors_eval) == len(error2s)
+        print('validation error: ',error_eval )
         if error2 < 15e-2 or count > 125:
             print("slight rotation")
-            break
+            # break
     F2=lst_F2
     print(lst_error2,error1, error0)
     print('x_pred1:', x_pred1[:,0])
@@ -169,7 +178,8 @@ def main():
     print('translation error0:', np.linalg.norm(F0[:3,3] - Freg[:3,3]))
     print('translation error1:', np.linalg.norm(F1[:3,3] - Freg[:3,3]))
     print('translation error2:', np.linalg.norm(F2[:3,3] - Freg[:3,3]))
-
+    print(error2s)
+    print(errors_eval)
     homo_matrix0, homo_matrix1, homo_matrix2= np.zeros((4,4)),np.zeros((4,4)), np.zeros((4,4))
     homo_matrix0[3,3] = 1
     homo_matrix1[3,3] = 1
@@ -194,7 +204,7 @@ def main():
     return result
 
 if __name__ == '__main__':
-    times = 120
+    times = 1
     rotation_sigma = 0.7
     cam_spot_sigma = 5e-2
     u_sigma = 1e-3 # unit: mm

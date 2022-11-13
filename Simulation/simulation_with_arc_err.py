@@ -13,8 +13,8 @@ from scipy.optimize import least_squares
 
 
 # total number of pairs
-line_num = 11
-add_noise = False
+line_num = 10
+add_noise = True
 
 # construct ground truth spots w.r.t. trus frame 
 trus_bounding_box = np.asarray([40, 80, 15], np.float32) # x,y,z, unit: mm
@@ -100,7 +100,8 @@ F2 =identity_matrix()
 cam_spots_pred = cam_spots_pred1
 count = 0
 trus_spots_arc1 = trus_spots_arc
-while error2 < lst_error2: 
+error2s = [error1]
+while count<55:#error2 < lst_error2: 
     count+=1
     theta = np.zeros(line_num)
     result = least_squares(fun, theta,\
@@ -120,6 +121,7 @@ while error2 < lst_error2:
     solver2 = Solver(geo_consist=False)
     F2,error2,lower2,upper2 = solver2.solve(trus_spots_arc, cam_laser_start_spots,cam_N, F0=F)
     print('error2: ',error2 )
+    error2s.append(error2)
     F = F2
     x_pred2, cam_spots_pred = solver2.output()
     if error2 < 2e-5 or count > 200:
@@ -133,6 +135,8 @@ print('x gt:', x)
 print('translation error0:', np.linalg.norm(F0[:3,3] - Freg[:3,3]))
 print('translation error1:', np.linalg.norm(F1[:3,3] - Freg[:3,3]))
 print('translation error2:', np.linalg.norm(F2[:3,3] - Freg[:3,3]))
+print(error2s)
+
 
 homo_matrix0, homo_matrix1, homo_matrix2= np.zeros((4,4)),np.zeros((4,4)), np.zeros((4,4))
 homo_matrix0[3,3] = 1
