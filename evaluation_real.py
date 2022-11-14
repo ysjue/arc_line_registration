@@ -75,6 +75,7 @@ def main(idx = 0):
     for sample in samples:
         weight = 1 * (np.random.rand() > 0.5)
         deviation = int((-5 + np.random.rand()*4)*weight + (1-weight)*(1+ np.random.rand()*4))
+        deviation = 4
         index = np.argmax(sample[-1,:])+deviation
         selected_samples.append(sample[:3,index])
     sample = np.array(selected_samples)
@@ -87,7 +88,8 @@ def main(idx = 0):
     t = sample[idx,0]
     u = sample[idx,1]
     v = sample[idx,2]
-    trus_spot_gt = np.array([gt_u, -1*(gt_v+0.01)*np.sin(t*np.pi/180), (gt_v+0.01)*np.cos(t*np.pi/180)])*1000
+    trus_spot_gt = np.array([gt_u, -1*(gt_v+0.01)*np.sin(gt_theta*np.pi/180), (gt_v+0.01)*np.cos(gt_theta*np.pi/180)])*1000
+    print(trus_spot_gt)
     cam_laser_start_spot = cam_laser_start_spots[:,idx] 
     cam_N = cam_Ns[:,idx]
     def fun(x, u, v, sampled_theta, cam_laser_start_spots, cam_N, Freg):
@@ -116,14 +118,14 @@ def main(idx = 0):
     [-2.27733530e-02,  2.30307031e-01, -9.72851503e-01,  2.21642210e+02],
     [ 0.00000000e+00,  0.00000000e+00 , 0.00000000e+00 , 1.00000000e+00]])
 
-    Freg2 = np.array([[-5.01887243e-01 , 8.59661138e-01 ,-9.53515754e-02 , 8.68234754e+00],
-    [ 8.53532874e-01 , 5.10093156e-01,  1.06238433e-01 ,-3.88006352e+01],
-    [ 1.39967238e-01, -2.80659899e-02, -9.89758290e-01,  2.21411589e+02],
-    [ 0.00000000e+00 , 0.00000000e+00,  0.00000000e+00 , 1.00000000e+00]])
-    Freg2 = np.array([[-5.04858221e-01 , 8.46691849e-01 , 1.68021099e-01 ,-9.00139506e+00],
- [ 8.54815052e-01,  5.17458579e-01,-3.90876802e-02 ,-3.49800620e+01],
- [-1.20039179e-01,  1.23893228e-01, -9.85008154e-01,  2.25599780e+02],
- [ 0.00000000e+00 , 0.00000000e+00 , 0.00000000e+00,  1.00000000e+00]])
+    # Freg2 = np.array([[-5.01887243e-01 , 8.59661138e-01 ,-9.53515754e-02 , 8.68234754e+00],
+    # [ 8.53532874e-01 , 5.10093156e-01,  1.06238433e-01 ,-3.88006352e+01],
+    # [ 1.39967238e-01, -2.80659899e-02, -9.89758290e-01,  2.21411589e+02],
+    # [ 0.00000000e+00 , 0.00000000e+00,  0.00000000e+00 , 1.00000000e+00]])
+#     Freg2 = np.array([[-5.04858221e-01 , 8.46691849e-01 , 1.68021099e-01 ,-9.00139506e+00],
+#  [ 8.54815052e-01,  5.17458579e-01,-3.90876802e-02 ,-3.49800620e+01],
+#  [-1.20039179e-01,  1.23893228e-01, -9.85008154e-01,  2.25599780e+02],
+#  [ 0.00000000e+00 , 0.00000000e+00 , 0.00000000e+00,  1.00000000e+00]])
 
     x = np.array([0,20])
     result1 = least_squares(fun, x,\
@@ -135,19 +137,20 @@ def main(idx = 0):
                                     args=(u,v,t,cam_laser_start_spot[:,None],cam_N[:,None],Freg2))
     t_pred1 = result1.x[0]+t
     t_pred2 = result2.x[0]+t
-    print(result1.x[0]+t,result2.x[0]+t,gt_theta)
+    print(t,result1.x[0]+t,result2.x[0]+t,gt_theta)
     # print(result1.cost,result2.cost)
     trus_spot_pred1 = np.array([u,-(v+0.01) * np.sin(t_pred1*np.pi/180.0), (v+0.01) * np.cos(t_pred1*np.pi/180.0)]) * 1000 
     trus_spot_pred2 = np.array([u,-(v+0.01) * np.sin(t_pred2*np.pi/180.0), (v+0.01) * np.cos(t_pred2*np.pi/180.0)]) * 1000 
     tre1 = np.linalg.norm(trus_spot_gt - trus_spot_pred1)
     tre2 = np.linalg.norm(trus_spot_gt - trus_spot_pred2)
+    print(tre1,tre2)
     return result1.x[0]+t, result2.x[0]+t, gt_theta, tre1, tre2
 
 
 
 if __name__ == '__main__':
     
-    multiple_times = 100
+    multiple_times = 12
     tracking_err1 = []
     tracking_err2 = []
     reg_err1 = []

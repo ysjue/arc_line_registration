@@ -14,7 +14,7 @@ from utils.transformations import (identity_matrix, quaternion_matrix,
                                    rotation_from_matrix, rotation_matrix,
                                    translation_matrix, unit_vector)
 
-with open('C:/Users/17242/Desktop/arc_line_registration/arc_line_registration/data/fitting_set1.yaml') as stream:
+with open('./data/fitting_set1.yaml') as stream:
     try:
         data = yaml.safe_load((stream))
     except yaml.YAMLERROIR as exc:
@@ -25,7 +25,7 @@ trus_spots = []
 # data_list = [d for i,d in zip(range(len(data_list)),data_list) if i < 10 ] # luck sample
 data_list = [d for i,d in zip(range(len(data_list)),data_list) if i not in [11,6]] # testset1 
 trus_spots_gt = []
-keys = ['TRUS1','TRUS2', 'TRUS3','TRUS4']
+keys = ['TRUS2', 'TRUS3','TRUS4']
 
 # # sample_num = 7
 # # sample_idxes = random.sample(range(10),sample_num)
@@ -60,11 +60,16 @@ for d in data_list:
     key = random.sample(keys,1)[0] # 'TRUS1'
     # key = 'TRUS1'
     theta = d[key]['angle']
+    if theta < d['TRUS1']['angle']:
+        theta -= 0.5
+    else:
+        theta += 0.5
     u = d[key]['u']
     v = d[key]['v']
     y = -1*(0.01 + v ) * math.sin(theta/180.0 * math.pi)
     z = (0.01 + v ) * math.cos(theta/180.0 * math.pi)
     trus_spots.append([u, y, z])
+   
     thetas.append(theta)
 trus_spots = np.array(trus_spots).T * 1000 # convert to mm
 thetas = np.array(thetas)
@@ -133,7 +138,7 @@ lst_error2 = 10000
 F2 =identity_matrix()
 cam_spots_pred = cam_spots_pred1*1
 count = 0
-F = F1
+F = F1*1
 trus_spots_arc1 = trus_spots_arc
 error2s = [error]
 errors_eval = [error]

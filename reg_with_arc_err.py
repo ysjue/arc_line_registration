@@ -25,12 +25,12 @@ trus_spots = []
 data_list = [d for i,d in zip(range(len(data_list)),data_list) if i < 10 ] # luck sample
 # data_list = [d for i,d in zip(range(len(data_list)),data_list) if i not in [11,6]] # testset1 
 trus_spots_gt = []
-keys = ['TRUS1','TRUS2', 'TRUS3','TRUS4']
+keys = ['TRUS2', 'TRUS3','TRUS4']
 
-sample_num = 4
+sample_num = 6
 sample_idxes = random.sample(range(10),sample_num)
 # sample_idxes = [i for i in range(10)]
-sample_idxes = [2,5,1,7]
+# sample_idxes = [2,5,1,7]
 print(sample_idxes)
 select_data_list = []
 for d in data_list:
@@ -56,7 +56,7 @@ thetas_gt = np.array(thetas_gt)
 thetas = []
 for d in data_list:
     key = random.sample(keys,1)[0] # 'TRUS1'
-    key = 'TRUS1'
+    # key = 'TRUS1'
     theta = d[key]['angle']
     u = d[key]['u']
     v = d[key]['v']
@@ -109,8 +109,10 @@ ax.set_xlabel('X Label (mm)')
 ax.set_ylabel('Y Label (mm)')
 ax.set_zlabel('Z Label (mm)')
 
+solver0 = Solver(geo_consist=False)
 solver1 = Solver(geo_consist=False)
-solver2 = Solver(geo_consist=True)
+solver2 = Solver(geo_consist=False)
+F_upper,_,_,_ = solver0.solve(trus_spots_gt, cam_laser_start_spots,cam_N, F0=identity_matrix())
 F1,error,lower,upper = solver1.solve(trus_spots, cam_laser_start_spots,cam_N, F0=identity_matrix())
 x_pred, cam_spots_pred1 = solver1.output()
 
@@ -163,14 +165,15 @@ while error2 < lst_error2:
     error_eval = np.mean(np.linalg.norm(trus_spots_pred2 - trus_spots_gt, axis = 0))
     errors_eval.append(error_eval)
     print('validation error: ',error_eval )
-    if error2 < 0.02 or count > 50:
+    if error2 < 0.02 or count > 10:
         print("slight rotation")
         break
 F2=lst_F2
 print('error1: ', error,lower,upper)
 print('error2: ', error2,lower2,upper2)
-print(F1)
-print(F2)
+print('F0: \n','['+',\n'.join(['['+' ,'.join([str(c) for c in row ])+']' for row in F_upper])+']')
+print('F1: \n','['+',\n'.join(['['+' ,'.join([str(c) for c in row ])+']' for row in F1])+']')
+print('F2: \n','['+',\n'.join(['['+' ,'.join([str(c) for c in row ])+']' for row in F2])+']')
 print(error2s)
 print(errors_eval )
 trus_laser_start_spots = np.linalg.inv(F2)[:3,:3] @ cam_laser_start_spots + np.linalg.inv(F2)[:3,3][:,None]
