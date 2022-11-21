@@ -27,7 +27,7 @@ data_list = [d for i,d in zip(range(len(data_list)),data_list) if i < 10 ] # luc
 trus_spots_gt = []
 keys = ['TRUS2', 'TRUS3','TRUS4']
 
-sample_num = 6
+sample_num = 10
 sample_idxes = random.sample(range(10),sample_num)
 # sample_idxes = [i for i in range(10)]
 # sample_idxes = [2,5,1,7]
@@ -56,7 +56,7 @@ thetas_gt = np.array(thetas_gt)
 thetas = []
 for d in data_list:
     key = random.sample(keys,1)[0] # 'TRUS1'
-    # key = 'TRUS1'
+    key = 'TRUS1'
     theta = d[key]['angle']
     u = d[key]['u']
     v = d[key]['v']
@@ -165,7 +165,7 @@ while error2 < lst_error2:
     error_eval = np.mean(np.linalg.norm(trus_spots_pred2 - trus_spots_gt, axis = 0))
     errors_eval.append(error_eval)
     print('validation error: ',error_eval )
-    if error2 < 0.02 or count > 10:
+    if error2 < 0.02 or count > 20:
         print("slight rotation")
         break
 F2=lst_F2
@@ -173,7 +173,9 @@ print('error1: ', error,lower,upper)
 print('error2: ', error2,lower2,upper2)
 print('F0: \n','['+',\n'.join(['['+' ,'.join([str(c) for c in row ])+']' for row in F_upper])+']')
 print('F1: \n','['+',\n'.join(['['+' ,'.join([str(c) for c in row ])+']' for row in F1])+']')
-print('F2: \n','['+',\n'.join(['['+' ,'.join([str(c) for c in row ])+']' for row in F2])+']')
+print('F2: \n','['+',\n'.join(['['+' ,'.join([str(c) for c in row ])+']' for row in np.linalg.inv(F2)])+']')
+print(trus_spots_pred2)
+print(trus_spots_gt)
 print(error2s)
 print(errors_eval )
 trus_laser_start_spots = np.linalg.inv(F2)[:3,:3] @ cam_laser_start_spots + np.linalg.inv(F2)[:3,3][:,None]

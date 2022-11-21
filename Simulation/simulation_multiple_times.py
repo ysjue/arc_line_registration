@@ -29,13 +29,13 @@ def main():
     #     np.random.rand(3,line_num) * trus_bounding_box[:,None]
     v_gt = 55 + np.random.rand(line_num) * 7
     u_gt = -25 + np.random.rand(line_num) * 50
-    theta_gt = -30 + np.random.rand(line_num) * 60
+    theta_gt = -18 + np.random.rand(line_num) * 36
     trus_spots = np.concatenate([u_gt[None,:],        # x axis
                                     -1*v_gt*np.sin(theta_gt*np.pi/180.0)[None,:],  # y axis
                                         v_gt*np.cos(theta_gt*np.pi/180.0)[None,:]], axis=0) # z axis
   
     weight = 1.0 * (np.random.rand(line_num) > 0.5)
-    random_theta = (-6 + np.random.rand(line_num) * 3) * weight + (3 + np.random.rand(line_num) * 3 ) * (1 - weight)
+    random_theta = (-6 + np.random.rand(line_num) * 3) * weight + (3 + np.random.rand(line_num) * 3) * (1 - weight)
     rotms = [rotation_matrix(t*3.1415926/180.0,[1,0,0],[0,0,0]) for t in random_theta]
     trus_spots_arc = [ rotm[:3,:3]@trus_spots[:,i][:,None]  \
                         for i, rotm in zip(range(line_num), rotms)]  
@@ -50,8 +50,12 @@ def main():
     angle2 = (3.1415926/180.0)* (-30 -60 * random.random())
     direction2 = np.array([1, 0.1,0.2],np.float32) 
     Freg = rotation_matrix(angle2, direction2) @ rotation_matrix(angle1, direction1)
-    Freg[:3,3] = np.array([-43,-190,300])
+    Freg[:3,3] = np.array([-43,-390,300])
     print(angle1/3.1415926 * 180,  angle2/3.1415926 * 180)       
+    Freg= np.array([[-4.95565366e-01,  8.42537551e-01 , 2.11057912e-01, -1.07281469e+01],
+    [ 8.68272044e-01 , 4.86918007e-01 , 9.49447830e-02 ,-3.89869408e+01],
+    [-2.27733530e-02,  2.30307031e-01, -9.72851503e-01,  2.91642210e+02],
+    [ 0.00000000e+00,  0.00000000e+00 , 0.00000000e+00 , 1.00000000e+00]])
     print( Freg)     
 
     # construct ground truth laser direction vectors w.r.t. camera frame 
@@ -92,17 +96,17 @@ def main():
     v = v_gt
     theta = theta_gt
     # calculate the solution
-    if add_noise:
+    if True:
         # trus_spots_noises = np.ones_like(trus_spots) * np.array([-1,-1,-2])[:,None]+\
         #                         np.random.rand(trus_spots.shape[0], trus_spots.shape[1])*np.array([2,2.0,4.0])[:,None]
         
-        rotation_sigma = 0.5
-        cam_spot_sigma = 0.5
-        sigma_x = 0.01
-        sigma_y = 0.01
-        sigma_z = 0.08
-        u_sigma = 1e-2 # unit: mm
-        v_sigma = 1e-2 # unit: mm
+        rotation_sigma = 0.05
+        cam_spot_sigma = 0.05
+        sigma_x = 0.005
+        sigma_y = 0.005
+        sigma_z = 0.01
+        u_sigma = 1e-3 # unit: mm
+        v_sigma = 1e-3 # unit: mm
         theta_noise = np.clip(rotation_sigma * np.random.randn(trus_spots.shape[1]),-2,2)+ theta_gt
         u_noise = np.clip(u_sigma * np.random.randn(trus_spots.shape[1]),-2,2)+ u_gt
         v_noise = np.clip(v_sigma * np.random.randn(trus_spots.shape[1]),-2,2) + v_gt
@@ -116,11 +120,11 @@ def main():
         v = v_noise
         theta = theta_noise
         for i in range(cam_N.shape[1]):
-            xx = np.clip(sigma_x * np.random.randn(),-0.03, 0.03)
-            yy = np.clip(sigma_y * np.random.randn(),-0.03, 0.03)
-            zz = np.clip(sigma_z * np.random.randn(),-0.08, 0.08)
+            xx = np.clip(sigma_x * np.random.randn(),-0.01, 0.01)
+            yy = np.clip(sigma_y * np.random.randn(),-0.01, 0.01)
+            zz = np.clip(sigma_z * np.random.randn(),-0.06, 0.06)
             cam_N[:,i] = unit_vector(cam_N[:,i] + np.array([xx,yy,zz]))
-        cam_laser_start_spots = cam_laser_start_spots + np.clip(cam_spot_sigma * np.random.randn(trus_spots.shape[1]),-3,3)
+        cam_laser_start_spots = cam_laser_start_spots + np.clip(cam_spot_sigma * np.random.randn(trus_spots.shape[1]),-3.5,3.5)
 
     # split the tracking set
     u = u[10:]
@@ -169,7 +173,7 @@ def main():
         count+=1
         theta = np.zeros(line_num)
         result = least_squares(fun, theta,\
-                                bounds=([-5.0]*line_num, [5.0] * line_num ),\
+                                bounds=([-6.0]*line_num, [6.0] * line_num ),\
                                     args=(trus_spots_arc, cam_spots_pred,F))
         thetas = result.x
         
@@ -193,7 +197,7 @@ def main():
         errors_eval.append(error_eval)
         assert len(errors_eval) == len(error2s)
         print('validation error: ',error_eval )
-        if error2 < 15e-2 or count > 18:
+        if error2 < 15e-2 or count > 30 :
             print("slight rotation")
             break
     F2=lst_F2
@@ -228,6 +232,12 @@ def main():
     results = [np.linalg.norm(F0[:3,3] - Freg[:3,3]),np.linalg.norm(F1[:3,3] - Freg[:3,3]),np.linalg.norm(F2[:3,3] - Freg[:3,3]),\
                     angle0*180.0 /np.pi,angle1*180.0 /np.pi,angle2*180.0 /np.pi]
     
+
+    print(trus_spots_gt[:,:10])
+    print(trus_spots_pred2[:,:10])
+    print('Freg: \n','['+';\n'.join([' '.join([str(c) for c in row ]) for row in np.linalg.inv(Freg)])+']')
+    print('F2: \n','['+';\n'.join([' '.join([str(c) for c in row ])  for row in np.linalg.inv(F2)])+']')
+    
     ##============================== Tracking ============================================###
     x = np.array([0,20])
     def tracking_fun(x,u,v,t,cam_laser_start_spots,cam_N,Freg):
@@ -246,6 +256,8 @@ def main():
     rot_errs1 = []
     tres2 = []
     rot_errs2 = []
+
+
     for idx in range(cam_laser_start_spots_tracking.shape[1]):
         uu = u[idx]
         vv = v[idx]
@@ -253,7 +265,7 @@ def main():
         cam_laser_start_spot_tracking = cam_laser_start_spots_tracking[:,idx]
         cam_N_i = cam_N_tracking[:,idx]
         result = least_squares(tracking_fun, x,\
-                                    bounds=([-6,0], [6,300] ),\
+                                    bounds=([-17,0], [17,300] ),\
                                         args=(uu,vv,t,cam_laser_start_spot_tracking[:,None],cam_N_i[:,None],F1))
         rot_err = np.abs(result.x[0]+t-theta_gt[line_num+idx])
         t_pred = result.x[0] + t
@@ -265,7 +277,7 @@ def main():
 
 
         result = least_squares(tracking_fun, x,\
-                                    bounds=([-6,0], [6,300] ),\
+                                    bounds=([-17,0], [17,300] ),\
                                         args=(uu,vv,t,cam_laser_start_spot_tracking[:,None],cam_N_i[:,None],F2))
         rot_err = np.abs(result.x[0]+t-theta_gt[line_num+idx])
         t_pred = result.x[0] + t
@@ -276,7 +288,7 @@ def main():
         tres2.append(tre)
 
         result = least_squares(tracking_fun, x,\
-                                    bounds=([-6,0], [6,300] ),\
+                                    bounds=([-17,0], [17,300] ),\
                                         args=(uu,vv,t,cam_laser_start_spot_tracking[:,None],cam_N_i[:,None],F0))
         rot_err = np.abs(result.x[0]+t-theta_gt[line_num+idx])
         t_pred = result.x[0] + t
@@ -286,11 +298,14 @@ def main():
         rot_errs0.append(rot_err)
         tres0.append(tre)
     # print([np.mean(rot_errs1), np.mean(tres1),np.mean(rot_errs2), np.mean(tres2)])
+        
+    
     return results+[np.mean(rot_errs0), np.mean(tres0),np.mean(rot_errs1), np.mean(tres1),\
             np.mean(rot_errs2), np.mean(tres2)]
 
+
 if __name__ == '__main__':
-    times = 20
+    times = 1
     rotation_sigma = 0.7
     cam_spot_sigma = 5e-2
     cam_N_sigma = [0.1,0.1,0.1]
@@ -306,9 +321,9 @@ if __name__ == '__main__':
         result = main()
         # results.append(result)
         print(result)
-        with open('./results/simulation_with_moderate_noise2.txt', 'a') as f:
+        # with open('./results/simulation_with_slight_noise_40.txt', 'a') as f:
         
-            result_input = ' '.join([str(val) for val in result])
-            result_input += '\n'
-            f.write(result_input)
-    f.close()
+        #     result_input = ' '.join([str(val) for val in result])
+        #     result_input += '\n'
+        #     f.write(result_input)
+    # f.close()

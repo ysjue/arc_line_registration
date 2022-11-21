@@ -117,7 +117,7 @@ for time in range(RANSAC_times):
 
                 
         
-        print('residual error is: ', np.mean(errs), np.max(errs))
+        print('residual error is: ', np.mean(errs), np.std(errs))
         import random
 
         import scipy.stats as st

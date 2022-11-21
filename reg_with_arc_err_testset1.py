@@ -58,12 +58,8 @@ thetas_gt = np.array(thetas_gt)
 thetas = []
 for d in data_list:
     key = random.sample(keys,1)[0] # 'TRUS1'
-    # key = 'TRUS1'
+    key = 'TRUS1'
     theta = d[key]['angle']
-    if theta < d['TRUS1']['angle']:
-        theta -= 0.5
-    else:
-        theta += 0.5
     u = d[key]['u']
     v = d[key]['v']
     y = -1*(0.01 + v ) * math.sin(theta/180.0 * math.pi)
@@ -178,19 +174,20 @@ print('error1: ', error,lower,upper)
 print('error2: ', error2,lower2,upper2)
 print('F0: \n','['+',\n'.join(['['+' ,'.join([str(c) for c in row ])+']' for row in F_upper])+']')
 print('F1: \n','['+',\n'.join(['['+' ,'.join([str(c) for c in row ])+']' for row in F1])+']')
-print('F2: \n','['+',\n'.join(['['+' ,'.join([str(c) for c in row ])+']' for row in F2])+']')
+print('F2: \n','['+',\n'.join(['['+' ,'.join([str(c) for c in row ])+']' for row in np.linalg.inv(F2)])+']')
 print(error2s)
 print(errors_eval)
 trus_laser_start_spots = np.linalg.inv(F2)[:3,:3] @ cam_laser_start_spots + np.linalg.inv(F2)[:3,3][:,None]
 trus_spots_pred2 = (np.linalg.inv(F2) @ homo(cam_spots_pred))[:-1,:]
 trus_spots_pred1 = (np.linalg.inv(F1) @ homo(cam_spots_pred1))[:-1,:]
-
+print(trus_spots_pred2)
+print(trus_spots_gt)
 for i in range(trus_spots_pred2.shape[1]):
     ax.scatter(trus_laser_start_spots[0,i], trus_laser_start_spots[1,i], trus_laser_start_spots[2,i], marker='*',color=colors[i if i < 11 else 10])
 
     ax.scatter(trus_spots_pred2[0,i], trus_spots_pred2[1,i], trus_spots_pred2[2,i], marker='^',color=colors[i if i < 11 else 10])
-    ax.scatter(trus_spots[0,i], trus_spots[1,i], trus_spots[2,i], marker='o',color=colors[i if i < 11 else 10])
-    ax.scatter(trus_spots_pred1[0,i], trus_spots_pred1[1,i], trus_spots_pred1[2,i], marker='x',color=colors[i if i < 11 else 10])
+    ax.scatter(trus_spots_gt[0,i], trus_spots_gt[1,i], trus_spots_gt[2,i], marker='o',color=colors[i if i < 11 else 10])
+    # ax.scatter(trus_spots_pred1[0,i], trus_spots_pred1[1,i], trus_spots_pred1[2,i], marker='x',color=colors[i if i < 11 else 10])
    
     # ax.text(trus_spots[0,i], trus_spots[1,i], trus_spots[2,i], str(sample_idxes[i]), color='red')
     # trus_N = F[:3,:3].T@cam_N

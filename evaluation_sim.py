@@ -2,7 +2,7 @@ import os
 import numpy as np
 import scipy.stats as st
 
-file_path = './results/simulation_with_moderate_noise1.txt'
+file_path = './results/simulation_with_slight_noise_40.txt'
 with open(file_path,'r') as f:
     lines = f.readlines()
 samples = []
@@ -11,7 +11,9 @@ for line in lines:
     if 'noise' in line:
         continue
     vals = [float(val_str) for val_str in line.split(' ') if val_str != '']
+    print(vals)
     assert len(vals) == 12
+    
     samples.append(vals)
 samples = np.array(samples)
 results = []
